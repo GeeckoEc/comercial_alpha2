@@ -41,7 +41,7 @@ class Item_AdquiscionAdmin(admin.ModelAdmin):
 
 @admin.register(Kardex)
 class KardexAdmin(admin.ModelAdmin):
-    list_display = ('id', 'producto', 'fecha', 'cantidad', 'precio')
+    list_display = ('id', 'producto', 'detalle', 'fecha', 'cantidad', 'saldo', 'precio')
     list_filter = ('producto', 'fecha')
 
 

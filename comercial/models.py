@@ -4,7 +4,7 @@ from django.db import models
 class Proveedor (models.Model):
     nombre          = models.CharField(max_length=100)
     identificacion  = models.CharField(max_length=20, unique=True)
-    descripcion     = models.TextField()
+    descripcion     = models.TextField(blank=True, null=True)
     direccion       = models.CharField(max_length=200)
     ciudad          = models.CharField(max_length=100)
     telefono        = models.CharField(max_length=20)
@@ -39,7 +39,7 @@ class Adquiscion (models.Model):
 
 class Producto (models.Model):
     nombre      = models.CharField(max_length=100)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True, null=True)
     precio      = models.DecimalField(max_digits=10, decimal_places=2)
     cantidad    = models.IntegerField()
 
@@ -58,13 +58,18 @@ class Item_Adquiscion (models.Model):
 
 
 class Kardex (models.Model):
-    producto    = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    detalles    =   [('Compra','Compra'), ('Venta','Venta'), ('Baja','Baja'), ('Alta','Alta')]
+
+    producto    = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='kardex')
+    detalle     = models.CharField(max_length=20, choices=detalles, default='Compra')
     fecha       = models.DateField()
-    cantidad    = models.IntegerField()
-    precio      = models.DecimalField(max_digits=10, decimal_places=2)
+    cantidad    = models.IntegerField(default=0)
+    saldo       = models.IntegerField(default=0)
+    precio      = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"{self.producto.nombre} - {self.fecha}"
+        ## return f"{self.producto.nombre} - {self.fecha}"
+        return f"Operación: {self.detalle} - Fecha: {self.fecha} - Cantidad: {self.cantidad} - Existencias: {self.saldo}"
 
 
 class Cliente (models.Model):
