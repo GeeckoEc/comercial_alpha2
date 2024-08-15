@@ -2,9 +2,9 @@ import time
 from django.shortcuts import render, get_object_or_404, HttpResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_protect
-from django_ajax.decorators import ajax
+# from django_ajax.decorators import ajax
 
-from .models import Producto, Kardex, Marca, Adquisicion, Item_Adquisicion, Proveedor
+from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor
 
 # Create your views here.
 def vista_productos (request, producto_id):
@@ -16,7 +16,7 @@ def vista_productos (request, producto_id):
     }   
     return render(request, 'productos/info.html', contenido)
 
-@ajax
+#@ajax
 def lista_productos (request):
     productos   = Producto.objects.all()
     marcas      = Marca.objects.all()
@@ -37,18 +37,18 @@ def crear_producto (request):
         producto.precio         =   request.POST['precio']
         producto.save()
         time.sleep(5)
-        return HttpResponse(reverse('lista_productos'))
+        return HttpResponse(reverse('productos/lista'))
     return HttpResponse('Error de método.')
 
-def crear_adquisicion (request):
+def crear_compra (request):
     contenido   = {}
     contenido['proveedores'] = Proveedor.objects.all()
     if request.method == 'POST':
-        ## adquisicion.fecha   = request.POST['fecha']
+        ## compra.fecha   = request.POST['fecha']
         factura             = request.POST['factura']
         proveedor_id           = request.POST['proveedor_id']
         proveedor          = Proveedor.objects.get(id=proveedor_id)
-        adquisicion         = Adquisicion(proveedor=proveedor, factura=factura)
-        adquisicion.save()
-        contenido['adquisicion'] = adquisicion
-    return render(request, 'crear_adquisicion.html', contenido)
+        compra         = Compra(proveedor=proveedor, factura=factura)
+        compra.save()
+        contenido['compra'] = compra
+    return render(request, 'compras/crear.html', contenido)
