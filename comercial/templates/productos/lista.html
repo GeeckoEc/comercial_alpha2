@@ -38,7 +38,7 @@
                     <th>Productos</th>
                     <th style="width: 100px;">Opciones</th>
                 </thead>
-                <tbody>
+                <tbody id="lista-productos">
                     {% for producto in productos %}
                     <tr>
                         <td style="vertical-align: middle;">{{producto}}</td>
@@ -54,7 +54,7 @@
         </div>
     </div>
     <!-- Modal -->
-    <div class="modal fade" id="producto-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    <div class="modal fade" id="producto-modal" data-bs-backdrop="static" data-bs-keyboard="false"
         aria-labelledby="encabezado" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -63,7 +63,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="http://localhost:8000/productos/crear/" method="POST">
+                    <form id="formulario" action="http://localhost:8000/productos/crear/" method="POST">
                         {% csrf_token %}
                         <div class="form-floating mb-2">
                             <input type="text" name="codigo" id="codigo" class="form-control" placeholder="codigo">
@@ -94,8 +94,8 @@
                             <input type="text" name="precio" id="precio"" class="form-control" placeholder="precio">
                             <label for="precio"><i class="bi bi-cash-coin"></i> Precio</label>
                         </div>
-                        <button type="submit" class="btn btn-primary form-control mt-3"><i class="bi bi-floppy"></i> Guardar</button>
-                        <button type="button" class="btn btn-secondary form-control mt-3" onclick="crear()">Crear</button>
+                        <!-- <button type="submit" class="btn btn-primary form-control mt-3"><i class="bi bi-floppy"></i> Guardar</button> -->
+                        <button type="button" class="btn btn-secondary form-control mt-3" onclick="crear()">Guardar</button>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -125,27 +125,81 @@
     ></script>
     
      <script>
+        $(document).ready(function () {
+            cargar()
+        })
+        function cargar () {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                }
+            });
+            $.ajax({
+                url:        '{% url "gestion_productos" %}',
+                dataType:   'JSON',
+                type:       'POST',
+                data:       {
+                    accion: 'lista'
+                }
+            }).done(function (data) {
+                $('#lista-productos').html('')
+                $.each(data.productos, function(index, producto) {
+                    $('#lista-productos').append(`
+                        <tr>
+                            <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
+                        <td>
+                            <a class="btn btn-primary" href="../info/${producto.id}">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                        </td>
+                        </tr>
+                    `)
+                })
+            })
+        }
+
         function crear () {
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                }
+            });
+            $.ajax({
+                url:        '{% url "gestion_productos" %}',
+                dataType:   'JSON',
+                type:       'POST',
+                data:       {
+                    accion:         'crear_producto',
+                    codigo:         $('#codigo').val(),
+                    marca:          $('#marca').val(),
+                    nombre:         $('#nombre').val(),
+                    presentacion:   $('#presentacion').val(),
+                    descripcion:    $('#descripcion').val(),
+                    precio:         $('#precio').val()
+                }
+            }).done(function (data) {
+                let color   =   'green'
+                if (!data.success) {
+                    color   =   'red'
+                } else {
+                    $('#myForm').find('input, textarea, select').each(function() {
+                        $(this).val('');
+                    });
+                    $('#producto-modal').modal('toggle')
+                    cargar()
+                }
+                $.alert({
+                    title:                  'Crear Producto',
+                    content:                data.message,
+                    type:                   color,
+                    icon:                   'fa-circle-check',
+                    theme:                  'modern',
+                    animateFromElemente:    false,
+                    buttons:                {
+                        Acpetar:            function () {}
+                    }
+                })
+            })
         }
-    });
-    $.ajax({
-        url:        '{% url "crear_producto" %}',
-        dataType:   'JSON',
-        type:       'POST',
-        data:       {
-            codigo:         $('#codigo').val(),
-            marca:          $('#marca').val(),
-            nombre:         $('#nombre').val(),
-            presentacion:   $('#presentacion').val(),
-            descripcion:    $('#descripcion').val(),
-            precio:         $('#precio').val()
-        }
-    }).done(function (data) {
-        alert(JSON.stringify(data))
-    })
-}
      </script>
 </html>

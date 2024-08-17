@@ -12,3 +12,6 @@
 
 ## django_ajax
     pip3 install django_ajax
+
+## djangorestframework
+    pip3 install djangorestframework
