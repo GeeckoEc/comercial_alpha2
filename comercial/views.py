@@ -127,4 +127,11 @@ def gestion_compras (request):
             contenido['productos'] = lista_productos.data
             contenido['success'] = True
             return JsonResponse(contenido, status=201)
+        if request.POST['accion'] == 'datos_productos':
+            productos = Producto.objects.select_related.all().defer('descripcion')
+            contenido = {
+                'productos':    productos,
+                'success':      True,
+            }
+            return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)

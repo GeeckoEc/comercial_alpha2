@@ -114,12 +114,20 @@
         referrerpolicy="no-referrer"
     ></script>
     <script>
-        let lista_productos = []
+        const Globales = {}
+        $(document).ready(()=>{
+            sessionStorage.clear()
+            if (typeof Globales.lista_productos == 'undefined') {
+                alert('se creó la variable')
+                Globales.lista_productos = []
+            }
+        })
         function abrir_selector () {
             $('#productos-modal').modal('toggle')
             productos_sin_seleccionar()
         }
 
+        
         function productos_sin_seleccionar () {
             let filtrar = []
             if (sessionStorage.getItem('seleccionados') !== null) {
@@ -145,7 +153,10 @@
                     }
                 }).done(function (data){
                     if (data.success) {
-                        lista_productos = data.productos
+                        if (lista_productos.length == 0) {
+                            alert('vacía')
+                            lista_productos = data.productos
+                        }
                         $('#productos').html('')
                         $.each(data.productos, function (index, producto) {
                             $('#productos').append(`
@@ -205,16 +216,23 @@
         }
 
         function lista_seleccionados () {
-            alert(JSON.stringify(lista_productos))
-            let productos = []
-            let ids = JSON.parse(sessionStorage.getItem('seleccionados'))
-            let info = ''
-            $.each(ids, function(index, id){
-                alert(lista_productos.find((producto) => producto.id == id.id))
-                info = lista_productos.find((producto) => producto.id == id.id)
-                productos.push(info)
+            $.ajax({
+                url:        '{% url "gestion_compras" %}',
+                type:       'POST',
+                dataType:   'JSON',
+                data:       {
+                    accion: 'datos_productos'
+                }
+            }).done(function (data){
+                if (data.success) {
+                    let ids = JSON.parse(sessionStorage.getItem('seleccionados'))
+                    $.each(ids, function(index, id){
+                        alert(data.productos.find((producto) => producto.id == id.id))
+                        //info = data.productos.find((producto) => producto.id == id.id)
+                        //productos.push(info)
+                    })
+                }
             })
-            alert(JSON.stringify(productos))
         }
     </script>
 </html>
