@@ -128,10 +128,42 @@ def gestion_compras (request):
             contenido['success'] = True
             return JsonResponse(contenido, status=201)
         if request.POST['accion'] == 'datos_productos':
-            productos = Producto.objects.select_related.all().defer('descripcion')
+            productos = Producto.objects.select_related.defer('descripcion')
             contenido = {
                 'productos':    productos,
                 'success':      True,
             }
             return JsonResponse(contenido, status=201)
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+
+
+
+class ProveedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Proveedor
+        fields = '__all__'
+
+def lista_proveedores (request):
+    contenido = {}
+    return render(request, 'proveedores/lista.html', contenido)
+
+def gestion_proveedores (request):
+    if request.method == 'POST':
+        if request.POST['accion'] == 'lista':
+            try:
+                proveedores = Proveedor.objects.all()
+                lista_proveedores = ProveedorSerializer(proveedores, many=True)
+                contenido   = {
+                    'proveedores': lista_proveedores.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al crear el proveedor: {}'.format(str(e))
+                }
+        elif request.POST['accion'] == 'crear_proveedor':
+            JsonResponse({'success': True, 'message': 'El proveedor fue creado correctamente.'}, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)

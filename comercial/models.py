@@ -138,5 +138,3 @@ class Item_Venta (models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} - {self.precio}"  
-    
-    

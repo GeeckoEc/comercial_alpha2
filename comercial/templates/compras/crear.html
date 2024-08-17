@@ -114,13 +114,9 @@
         referrerpolicy="no-referrer"
     ></script>
     <script>
-        const Globales = {}
+        let lista_productos = []
         $(document).ready(()=>{
-            sessionStorage.clear()
-            if (typeof Globales.lista_productos == 'undefined') {
-                alert('se creó la variable')
-                Globales.lista_productos = []
-            }
+            // sessionStorage.clear()
         })
         function abrir_selector () {
             $('#productos-modal').modal('toggle')
@@ -153,10 +149,7 @@
                     }
                 }).done(function (data){
                     if (data.success) {
-                        if (lista_productos.length == 0) {
-                            alert('vacía')
-                            lista_productos = data.productos
-                        }
+                        lista_productos = data.productos
                         $('#productos').html('')
                         $.each(data.productos, function (index, producto) {
                             $('#productos').append(`

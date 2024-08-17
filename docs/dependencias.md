@@ -15,3 +15,6 @@
 
 ## djangorestframework
     pip3 install djangorestframework
+
+## djangorestframework
+    pip3 install djangorest
