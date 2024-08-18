@@ -92,7 +92,6 @@ def gestion_productos (request):
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
             
-
 def crear_compra (request):
     contenido   = {}
     contenido['proveedores']    =   Proveedor.objects.all()
@@ -136,9 +135,6 @@ def gestion_compras (request):
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
-
-
-
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
@@ -152,7 +148,7 @@ def gestion_proveedores (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista':
             try:
-                proveedores = Proveedor.objects.all()
+                proveedores = Proveedor.objects.filter(estado=True)
                 lista_proveedores = ProveedorSerializer(proveedores, many=True)
                 contenido   = {
                     'proveedores': lista_proveedores.data,
@@ -165,5 +161,54 @@ def gestion_proveedores (request):
                     'message': 'Error al crear el proveedor: {}'.format(str(e))
                 }
         elif request.POST['accion'] == 'crear_proveedor':
-            JsonResponse({'success': True, 'message': 'El proveedor fue creado correctamente.'}, status=201)
+            try:
+                proveedor               =   Proveedor()
+                proveedor.nombre         =   request.POST['nombre']
+                proveedor.identificacion =   request.POST['identificacion']
+                proveedor.descripcion    =   request.POST['descripcion']
+                proveedor.direccion      =   request.POST['direccion']
+                proveedor.ciudad         =   request.POST['ciudad']
+                proveedor.telefono       =   request.POST['telefono']
+                proveedor.celular        =   request.POST['celular']
+                proveedor.correo          =   request.POST['correo']
+                proveedor.save()
+                return JsonResponse({'success': True, 'message': 'El proveedor fue creado correctamente.'}, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al crear el proveedor: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'info':
+            proveedor = ProveedorSerializer(Proveedor.objects.get(id=request.POST['id']))
+            contenido = {
+                'proveedor': proveedor.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'editar_proveedor':
+            proveedor               =   Proveedor.objects.get(id=request.POST['id'])
+            proveedor.nombre         =   request.POST['nombre']
+            proveedor.identificacion =   request.POST['identificacion']
+            proveedor.descripcion    =   request.POST['descripcion']
+            proveedor.direccion      =   request.POST['direccion']
+            proveedor.ciudad         =   request.POST['ciudad']
+            proveedor.telefono       =   request.POST['telefono']
+            proveedor.celular        =   request.POST['celular']
+            proveedor.correo          =   request.POST['correo']
+            proveedor.save()
+            contenido = {
+                'success': True,
+                'message': 'El proveedor fue actualizado correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'deshabilitar_proveedor':
+            proveedor = Proveedor.objects.get(id=request.POST['id'])
+            proveedor.estado = False
+            proveedor.save()
+            contenido = {
+                'success': True,
+                'message': 'El proveedor fue deshabilitado correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
