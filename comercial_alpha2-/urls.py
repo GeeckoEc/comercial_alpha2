@@ -1,0 +1,31 @@
+"""
+URL configuration for comercial_alpha2 project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from django.contrib import admin
+from django.urls import path
+from comercial.views import info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path('productos/info/<int:producto_id>', info_producto, name="info_producto"),
+    path('productos/lista/', lista_productos, name="lista_productos"),
+    path('productos/gestion/', gestion_productos, name="gestion_productos"),
+    path('compras/crear/', crear_compra, name="crear_compra"),
+    path('gestion_compras/', gestion_compras, name="gestion_compras"),
+    path('proveedores/lista', lista_proveedores, name="lista_proveedores"),
+    path('proveedores/gestion', gestion_proveedores, name="gestion_proveedores"),
+]
