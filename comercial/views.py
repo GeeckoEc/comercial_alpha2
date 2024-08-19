@@ -230,12 +230,20 @@ def gestion_proveedores (request):
                 estado = True
             else:
                 estado = False
-            proveedores = Proveedor.objects.filter(
-                Q(estado=estado) &
-                Q(nombre__icontains=request.POST['buscar']) | 
+            print(estado)
+            """ proveedores = Proveedor.objects.filter(
+                Q(estado=estado) |
+                (Q(nombre__icontains=request.POST['buscar']) | 
                 Q(identificacion__icontains=request.POST['buscar']) | 
                 Q(descripcion__icontains=request.POST['buscar']) | 
                 Q(telefono__icontains=request.POST['buscar']) |
+                Q(celular__icontains=request.POST['buscar']))
+            ) """
+            proveedores = Proveedor.objects.filter(estado=estado).filter(
+                Q(nombre__icontains=request.POST['buscar']) | 
+                Q(identificacion__icontains=request.POST['buscar']) | 
+                Q(descripcion__icontains=request.POST['buscar']) | 
+                Q(telefono__icontains=request.POST['buscar']) | 
                 Q(celular__icontains=request.POST['buscar'])
             )
             lista_proveedores = ProveedorSerializer(proveedores, many=True)
