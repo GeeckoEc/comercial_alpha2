@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse, 
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
+from django.db.models import Q
 # from django_ajax.decorators import ajax
 
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor
@@ -222,6 +223,25 @@ def gestion_proveedores (request):
             contenido = {
                 'success': True,
                 'message': 'El proveedor fue habilitado correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'buscar':
+            if request.POST['estado'].lower() == 'true':
+                estado = True
+            else:
+                estado = False
+            proveedores = Proveedor.objects.filter(
+                Q(estado=estado) &
+                Q(nombre__icontains=request.POST['buscar']) | 
+                Q(identificacion__icontains=request.POST['buscar']) | 
+                Q(descripcion__icontains=request.POST['buscar']) | 
+                Q(telefono__icontains=request.POST['buscar']) |
+                Q(celular__icontains=request.POST['buscar'])
+            )
+            lista_proveedores = ProveedorSerializer(proveedores, many=True)
+            contenido   = {
+                'proveedores': lista_proveedores.data,
+                'success': True,
             }
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
