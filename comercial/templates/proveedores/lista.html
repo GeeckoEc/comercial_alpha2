@@ -181,6 +181,7 @@
         }
 
         function mostrar_modal () {
+            formulario()
             document.getElementById('formulario-proveedor').reset();
             $('#modal-proveedor').modal('toggle')
         }
@@ -227,7 +228,21 @@
         }
 
         function ver (id) {
-
+            $.ajax({
+                url:        '{% url "gestion_proveedores" %}',
+                type:       'POST',
+                dataType:   'JSON',
+                data:       {
+                    accion: 'info',
+                    id:     id
+                }
+            }).then(function (respuesta) {
+                informacion(respuesta.proveedor)
+                $('#modal-proveedor').modal('toggle')
+            }).catch(function (error) {
+                let respuesta = JSON.parse(error.responseText)
+                mensaje('red', 'fa fa-circle-xmark', 'Error', respuesta.message)
+            })
         }
 
         function editar (id) {
@@ -240,6 +255,7 @@
                     id:     id
                 }
             }).then(function (respuesta) {
+                formulario()
                 $('#id').val(respuesta.proveedor.id)
                 $('#nombre').val(respuesta.proveedor.nombre)
                 $('#identificacion').val(respuesta.proveedor.identificacion)
@@ -377,5 +393,75 @@
                 }
             })
         }
+
+        function formulario () {
+            $('.modal-body').html(`
+                <form id="formulario-proveedor">
+                        <input type="text" name="id" id="id" hidden>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="nombre">
+                            <label for="nombre"><i class="fa-regular fa-building"></i> Nombre del Proveedor</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="identificacion" name="identificacion" placeholder="identificacion">
+                            <label for="identificacion><i class="fa-regular fa-id-card"></i> Identificación</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <textarea style="height: 120px;" class="form-control" id="descripcion" name="descripcion" placeholder="descripcion"></textarea>
+                            <label for="descripcion"><i class="fa-regular fa-rectangle-list"></i> Descripción</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="direccion" name="direccion" placeholder="direccion">
+                            <label for="direccion"><i class="fa-solid fa-map-location-dot"></i> Dirección</label>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="ciudad">
+                            <label for="ciudad"><i class="fa-solid fa-mountain-city"></i> Ciudad</label>
+                        </div>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="telefono" name="telefono" placeholder="telefono">
+                            <label for="telefono"><i class="fa-solid fa-phone"></i> Teléfono</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="text" class="form-control" id="celular" name="celular" placeholder="celular">
+                            <label for="celular"><i class="fa-solid fa-mobile-screen-button"></i> Celular</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="email" class="form-control" id="correo" name="correo" placeholder="correo">
+                            <label for="correo"><i class="fa-regular fa-envelope"></i> Correo Electrónico</label>
+                        </div>
+                        <button type="button" class="btn btn-primary form-control" onclick="guardar()"><i class="fa-regular fa-floppy-disk"></i> Guardar</button>
+                    </form>
+            `)
+        }
+
+        function informacion (datos) {
+            let estado = 'Deshabilitado'
+            if (JSON.parse(datos.estado)) {
+                estado = 'Habilitado'
+            }
+            $('.modal-body').html(`
+                <h4>Estado</h4>
+                <h5  class="text-black-50">${estado}</h5>
+                <h4>Nombre</h4>
+                <h5  class="text-black-50">${datos.nombre}</h5>
+                <h4>Identificación</h4>
+                <h5  class="text-black-50">${datos.identificacion}</h5>
+                <h4>Descripción</h4>
+                <h5  class="text-black-50">${datos.descripcion}</h5>
+                <h4>Dirección</h4>
+                <h5  class="text-black-50">${datos.direccion}</h5>
+                <h4>Ciudad</h4>
+                <h5  class="text-black-50">${datos.ciudad}</h5>
+                <h4>Teléfono</h4>
+                <h5  class="text-black-50">${datos.telefono}</h5>
+                <h4>Celular</h4>
+                <h5  class="text-black-50">${datos.celular}</h5>
+                <h4>Correo</h4>
+                <h5  class="text-black-50">${datos.correo}</h5>
+            `)
+            
+        }
+
     </script>
 </html>
