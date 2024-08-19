@@ -29,6 +29,24 @@
                 <h1>Proveedores</h1>
                 <button type="button" class="btn btn-primary px-4" onclick="mostrar_modal()"><i class="fa-solid fa-plus"></i> Nuevo</button>
             </div>
+            <div class="row mb-3 pe-0">
+                <div class="col ps-0">
+                    <div class="form-floating">
+                        <input type="search" name="buscar" id="buscar" class="form-control" placeholder="buscar">
+                        <label for="buscar"><i class="bi bi-search"></i> Buscar</label>
+                    </div>
+                </div>
+                <div class="col pe-0">
+                    <div class="form-floating">
+                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="lista(false)">
+                            <option value="true" selected>Habilitados</option>
+                            <option value="false">Deshabiltados</option>
+                        </select>
+                        <label for="estado">Mostrar proveedores</label>
+                    </div>
+                </div>
+                
+            </div>
             <table class="table table-borderless table-hover border">
                 <thead class="table-dark">
                     <th>Proveedores</th>
@@ -115,11 +133,11 @@
 
     <script>
         $(document).ready(function () {
-            lista()
+            lista(true)
         })
 
 
-        function lista () {
+        function lista (estado) {
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
                     xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
@@ -130,27 +148,34 @@
                 type:       'POST',
                 dataType:   'JSON',
                 data:       {
-                    accion: 'lista'
+                    accion: 'lista',
+                    estado: Boolean(estado)
                 },
-            }).always(function (respuesta) {
+            }).then(function (respuesta) {
                 if (respuesta.success) {
                     $('#lista-proveedores').html('')
                     $.each(respuesta.proveedores, function (index, proveedor) {
+                        let boton = ``
+                        if ($('#estado').val()  == true || $('#estado').val()  == 'true') {
+                            boton = `<button class="btn btn-danger" onclick="deshabilitar(${proveedor.id})"><i class="bi bi-x"></i></button>`
+                        } else {
+                            boton   =   `<button class="btn btn-success" onclick="habilitar(${proveedor.id})"><i class="bi bi-check"></i></button>`
+                        }
                         $('#lista-proveedores').append(`
                             <tr>
                                 <td style="vertical-align: middle;">${proveedor.nombre} - ${proveedor.ciudad}</td>
                                 <td>
                                     <button class="btn btn-primary" onclick="ver(${proveedor.id})"><i class="bi bi-info-circle"></i></button>
                                     <button class="btn btn-primary" onclick="editar(${proveedor.id})"><i class="bi bi-pencil-square"></i></button>
-                                    <button class="btn btn-danger" onclick="deshabilitar(${proveedor.id})"><i class="bi bi-x"></i></button>
+                                    ${boton}
                                 </td>
                             </tr>
                         `)
                     })
-                    
-                } else {
-                    mensaje('red', 'fa fa-circle-xmark', 'Error al cargar lista', respuesta.message)
                 }
+            }).catch(function (error) {
+                respuesta = JSON.parse(error.responseText)
+                mensaje('red', 'fa fa-circle-xmark', 'Error al cargar lista', respuesta.message)
             })
         }
 
@@ -192,7 +217,7 @@
                         document.getElementById('formulario-proveedor').reset();
                         espera()
                     })
-                    lista()
+                    lista(true)
                 }
             }).catch(function (error){
                 let respuesta = JSON.parse(error.responseText)
@@ -246,6 +271,23 @@
                 }
             })
         }
+
+        function habilitar (id) {
+            $.alert({
+                icon:               'fa fa-circle-exclamation',
+                title:              'Habilitar Proveedor',
+                type:               'orange',
+                content:            '¿Desea habilitar el proveedor?',
+                theme:              'modern',
+                animateFromElement: false,
+                buttons:            {
+                    Sí:     function () {
+                        habilitar_proveedor(id)
+                    },
+                    No:     function () {}
+                }
+            })
+        }
         
         function deshabilitar_proveedor (id) {
             $.ajax({
@@ -257,11 +299,29 @@
                     id:     id
                 }
             }).then(function (respuesta) {
-                lista()
+                lista(true)
                 mensaje('green', 'fa fa-circle-check', 'Deshabilitar Proveedor', respuesta.message)
             }).catch(function (error) {
                 let respuesta = JSON.parse(error.responseText)
                 mensaje('red', 'fa fa-circle-xmark', 'Error al Deshabilitar', respuesta.message)
+            })
+        }
+
+        function habilitar_proveedor (id) {
+            $.ajax({
+                url:        '{% url "gestion_proveedores" %}',
+                type:       'POST',
+                dataType:   'JSON',
+                data:       {
+                    accion: 'habilitar_proveedor',
+                    id:     id
+                }
+            }).then(function (respuesta) {
+                lista(true)
+                mensaje('green', 'fa fa-circle-check', 'Habilitar Proveedor', respuesta.message)
+            }).catch(function (error) {
+                let respuesta = JSON.parse(error.responseText)
+                mensaje('red', 'fa fa-circle-xmark', 'Error al Habilitar', respuesta.message)
             })
         }
 

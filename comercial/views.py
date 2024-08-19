@@ -148,7 +148,11 @@ def gestion_proveedores (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista':
             try:
-                proveedores = Proveedor.objects.filter(estado=True)
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                proveedores = Proveedor.objects.filter(estado=estado)
                 lista_proveedores = ProveedorSerializer(proveedores, many=True)
                 contenido   = {
                     'proveedores': lista_proveedores.data,
@@ -162,15 +166,15 @@ def gestion_proveedores (request):
                 }
         elif request.POST['accion'] == 'crear_proveedor':
             try:
-                proveedor               =   Proveedor()
-                proveedor.nombre         =   request.POST['nombre']
-                proveedor.identificacion =   request.POST['identificacion']
-                proveedor.descripcion    =   request.POST['descripcion']
-                proveedor.direccion      =   request.POST['direccion']
-                proveedor.ciudad         =   request.POST['ciudad']
-                proveedor.telefono       =   request.POST['telefono']
-                proveedor.celular        =   request.POST['celular']
-                proveedor.correo          =   request.POST['correo']
+                proveedor                   =   Proveedor()
+                proveedor.nombre            =   request.POST['nombre']
+                proveedor.identificacion    =   request.POST['identificacion']
+                proveedor.descripcion       =   request.POST['descripcion']
+                proveedor.direccion         =   request.POST['direccion']
+                proveedor.ciudad            =   request.POST['ciudad']
+                proveedor.telefono          =   request.POST['telefono']
+                proveedor.celular           =   request.POST['celular']
+                proveedor.correo            =   request.POST['correo']
                 proveedor.save()
                 return JsonResponse({'success': True, 'message': 'El proveedor fue creado correctamente.'}, status=201)
             except Exception as e:
@@ -187,15 +191,15 @@ def gestion_proveedores (request):
             }
             return JsonResponse(contenido, status=201)
         elif request.POST['accion'] == 'editar_proveedor':
-            proveedor               =   Proveedor.objects.get(id=request.POST['id'])
-            proveedor.nombre         =   request.POST['nombre']
-            proveedor.identificacion =   request.POST['identificacion']
-            proveedor.descripcion    =   request.POST['descripcion']
-            proveedor.direccion      =   request.POST['direccion']
-            proveedor.ciudad         =   request.POST['ciudad']
-            proveedor.telefono       =   request.POST['telefono']
-            proveedor.celular        =   request.POST['celular']
-            proveedor.correo          =   request.POST['correo']
+            proveedor                   =   Proveedor.objects.get(id=request.POST['id'])
+            proveedor.nombre            =   request.POST['nombre']
+            proveedor.identificacion    =   request.POST['identificacion']
+            proveedor.descripcion       =   request.POST['descripcion']
+            proveedor.direccion         =   request.POST['direccion']
+            proveedor.ciudad            =   request.POST['ciudad']
+            proveedor.telefono          =   request.POST['telefono']
+            proveedor.celular           =   request.POST['celular']
+            proveedor.correo            =   request.POST['correo']
             proveedor.save()
             contenido = {
                 'success': True,
@@ -209,6 +213,15 @@ def gestion_proveedores (request):
             contenido = {
                 'success': True,
                 'message': 'El proveedor fue deshabilitado correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'habilitar_proveedor':
+            proveedor = Proveedor.objects.get(id=request.POST['id'])
+            proveedor.estado = True
+            proveedor.save()
+            contenido = {
+                'success': True,
+                'message': 'El proveedor fue habilitado correctamente.',
             }
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
