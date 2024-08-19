@@ -38,7 +38,7 @@
                 </div>
                 <div class="col pe-0">
                     <div class="form-floating">
-                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="lista(false)">
+                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="lista(this.value)">
                             <option value="true" selected>Habilitados</option>
                             <option value="false">Deshabiltados</option>
                         </select>
@@ -138,6 +138,8 @@
 
 
         function lista (estado) {
+            estado = JSON.parse(estado)
+            alert(estado)
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
                     xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
