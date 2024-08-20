@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Venta</title>
+    {% include 'includes/header.html' %}
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+    <div class="container">
+        <div class="row my-5 pt-5">
+            <h1>Nueva Venta</h1>
+            <div>
+                <div class="row my-3">
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="text" name="factura" id="factura" class="form-control" placeholder="factura">
+                            <label for="factura">Factura</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <select name="cliente" id="cliente" class="form-select" placeholder="cliente"></select>
+                        <label for="cliente">Cliente</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+    {% include 'includes/scripts.html' %}
+</html>

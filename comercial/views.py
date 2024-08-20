@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.db.models import Q
 # from django_ajax.decorators import ajax
 
-from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor
+from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cliente, Venta, Item_Venta
 
 # Create your views here.
 
@@ -18,11 +18,6 @@ from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = '__all__'
-
-class MarcaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Marca
         fields = '__all__'
 
 class MarcaSerializer(serializers.ModelSerializer):
@@ -48,7 +43,6 @@ def info_producto (request, producto_id):
     }   
     return render(request, 'productos/info.html', contenido)
 
-#@ajax
 def lista_productos (request):
     ##productos   = Producto.objects.all()
     marcas      = Marca.objects.all()
@@ -358,4 +352,32 @@ def gestion_marcas (request):
                     'message': 'Error al mostrar la marcas: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+def crear_venta (request):
+    contenido   = {}
+    contenido['clientes']    =   Cliente.objects.filter(estado=True)
+    return render(request, 'ventas/crear.html', contenido)
+
+def gestion_ventas (request):
+    if request.method == 'POST':
+        if request.POST['accion'] == 'crear_compra': 
+            venta = Venta()
+            venta.factura   =   request.POST['factura']
+            venta.cliente   =   request.POST['cliente']
+            venta.fecha     =   datetime.now()
+            venta.total     =   request.POST['total']
+            venta.save()
+            for item in json.loads(request.POST['productos']):
+                item_venta             =   Item_Venta()
+                item_venta.venta        =   venta
+                item_venta.producto     =   Producto.objects.get(id=item['id'])
+                item_venta.cantidad     =   item['cantidad']
+                item_venta.precio       =   item['precio']
+                item_venta.save()
+            contenido = {
+                'success': True,
+                'message': 'La venta fue creada correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
