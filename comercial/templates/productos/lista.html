@@ -5,28 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos</title>
-    <link 
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
-        crossorigin="anonymous"
-    >
-    <link 
-        rel="stylesheet" 
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
-    <link 
-        rel="stylesheet" 
-        href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.css" 
-        integrity="sha512-0V10q+b1Iumz67sVDL8LPFZEEavo6H/nBSyghr7mm9JEQkOAm91HNoZQRvQdjennBb/oEuW+8oZHVpIKq+d25g==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer" 
-    />
+    {% include 'includes/header.html' %}
 </head>
 
 <body>
+    {% include 'includes/menu.html' %}
     <div class="container">
-        <div class="row my-5">
+        <div class="row my-5 pt-5">
             <div class="d-flex justify-content-between mb-3">
                 <h1>Lista de Productos</h1>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#producto-modal">
@@ -106,23 +91,7 @@
         </div>
     </div>
 </body>
-    <script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" 
-        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer"
-    ></script>
-    <script 
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"
-    ></script>
-    <script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.js" 
-        integrity="sha512-zP5W8791v1A6FToy+viyoyUUyjCzx+4K8XZCKzW28AnCoepPNIXecxh9mvGuy3Rt78OzEsU+VCvcObwAMvBAww==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer"
-    ></script>
+    {% include 'includes/scripts.html' %}    
     
      <script>
         $(document).ready(function () {
@@ -139,7 +108,8 @@
                 dataType:   'JSON',
                 type:       'POST',
                 data:       {
-                    accion: 'lista'
+                    accion: 'lista',
+                    estado: true
                 }
             }).done(function (data) {
                 $('#lista-productos').html('')

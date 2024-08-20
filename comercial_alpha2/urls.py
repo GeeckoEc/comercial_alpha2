@@ -17,9 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from comercial.views import info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores
+from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores
 
 urlpatterns = [
+    path("", index, name="index"),
     path("admin/", admin.site.urls),
     path('productos/info/<int:producto_id>', info_producto, name="info_producto"),
     path('productos/lista/', lista_productos, name="lista_productos"),

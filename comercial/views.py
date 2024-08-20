@@ -13,6 +13,10 @@ from django.db.models import Q
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor
 
 # Create your views here.
+
+def index (request):
+    return render(request, 'index.html')
+
 def info_producto (request, producto_id):
     producto    = get_object_or_404(Producto, id=producto_id)
     kardex      = producto.kardex.all()
