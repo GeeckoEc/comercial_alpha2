@@ -1,5 +1,6 @@
 import time
 import json
+from datetime import datetime, date
 from django.core import serializers
 from rest_framework import serializers
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse, HttpResponseRedirect
@@ -58,7 +59,34 @@ class MarcaSerializer(serializers.ModelSerializer):
 
 def gestion_productos (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_producto':
+        if request.POST['accion'] == 'lista':
+            if request.POST['estado'].lower() == 'true':
+                estado = True
+            else:
+                estado = False
+            productos = Producto.objects.filter(estado=estado).defer('descripcion')
+            lista_productos = ProductoSerializer(productos, many=True)
+            marcas      = Marca.objects.all()
+            lista_marcas = MarcaSerializer(marcas, many=True)
+            contenido   = {
+                'productos': lista_productos.data,
+                'marcas': lista_marcas.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'lista_filtrada':
+            if request.POST['filtrar'] == 'null':
+                productos = Producto.objects.filter(estado=True)
+            else:
+                id = request.POST['filtrar']
+                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion')
+            lista_productos = ProductoSerializer(productos, many=True)
+            contenido = {
+                'productos': lista_productos.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'crear_producto':
             try:
                 producto                =   Producto()
                 producto.codigo         =   request.POST['codigo']
@@ -79,61 +107,78 @@ def gestion_productos (request):
                     'message': 'Error al crear el producto: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
-        elif request.POST['accion'] == 'lista':
-            ## productos   = serializers.serialize('json', Producto.objects.__str__())
-            productos = Producto.objects.all()
+        elif request.POST['accion'] == 'editar_producto':
+            pass
+        elif request.POST['accion'] == 'deshabilitar_producto':
+            pass
+        elif request.POST['accion'] == 'habilitar_producto':
+            pass
+        elif request.POST['accion'] == 'info_producto':
+            pass
+        elif request.POST['accion'] == 'buscar':
+            if request.POST['estado'].lower() == 'true':
+                estado = True
+            else:
+                estado = False
+            productos = Producto.objects.filter(estado=estado).filter(
+                Q(codigo__icontains=request.POST['buscar']) |
+                Q(nombre__icontains=request.POST['buscar']) |
+                Q(presentacion__icontains=request.POST['buscar'])
+            )
             lista_productos = ProductoSerializer(productos, many=True)
-            marcas      = Marca.objects.all()
-            lista_marcas = MarcaSerializer(marcas, many=True)
-            ## productos   =   Producto.objects.__str__()
-            contenido   = {
+            contenido = {
                 'productos': lista_productos.data,
-                'marcas': lista_marcas.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'buscar_sin_seleccionar':
+            if request.POST['filtrar'] == 'null':
+                productos = Producto.objects.filter(estado=True)
+            else:
+                id = request.POST['filtrar']
+                productos = Producto.objects.filter(estado=True).filter(
+                    Q(codigo__icontains=request.POST['buscar']) |
+                    Q(nombre__icontains=request.POST['buscar']) |
+                    Q(presentacion__icontains=request.POST['buscar'])
+                ).exclude(id__in=json.loads(id)).defer('descripcion')
+            lista_productos = ProductoSerializer(productos, many=True)
+            contenido = {
+                'productos': lista_productos.data,
+                'success': True,
             }
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
             
 def crear_compra (request):
     contenido   = {}
-    contenido['proveedores']    =   Proveedor.objects.all()
+    contenido['proveedores']    =   Proveedor.objects.filter(estado=True)
     return render(request, 'compras/crear.html', contenido)
 
 def gestion_compras (request):
-    contenido = {}
-
     if request.method == 'POST':
         if request.POST['accion'] == 'crear_compra':
             try:
-                ## compra.fecha   =   request.POST['fecha']
-                factura         =   request.POST['factura']
-                proveedor_id    =   request.POST['proveedor']
-                proveedor       =   Proveedor.objects.get(id=proveedor_id)
-                compra          =   Compra(proveedor=proveedor, factura=factura)
+                compra = Compra()
+                compra.factura      =   request.POST['factura']
+                compra.proveedor    =   request.POST['proveedor']
+                compra.fecha        =   datetime.now()
+                compra.total        =   request.POST['total']
                 compra.save()
-                ## contenido['compra']     =   compra
+                for item in json.loads(request.POST['productos']):
+                    item_compra             =   Item_Compra()
+                    item_compra.compra      =   compra
+                    item_compra.producto    =   Producto.objects.get(id=item['id'])
+                    item_compra.cantidad    =   item['cantidad']
+                    item_compra.costo      =   item['precio']
+                    item_compra.save()
+                
                 return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
             except Exception as e:
                 response_data   =   {
                     'success': False,
                     'message': 'Error al crear la compra: {}'.format(str(e))
                 }
-        elif request.POST['accion'] == 'lista_filtrada':
-            if request.POST['filtrar'] == 'null':
-                productos = Producto.objects.all()
-            else:
-                id = request.POST['filtrar']
-                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion')
-            lista_productos = ProductoSerializer(productos, many=True)
-            contenido['productos'] = lista_productos.data
-            contenido['success'] = True
-            return JsonResponse(contenido, status=201)
-        if request.POST['accion'] == 'datos_productos':
-            productos = Producto.objects.select_related.defer('descripcion')
-            contenido = {
-                'productos':    productos,
-                'success':      True,
-            }
-            return JsonResponse(contenido, status=201)
+                return JsonResponse(response_data, status=500)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 class ProveedorSerializer(serializers.ModelSerializer):
