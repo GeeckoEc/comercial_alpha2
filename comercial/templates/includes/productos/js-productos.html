@@ -1,0 +1,351 @@
+<script>
+    $(document).ready(function () {
+        lista(true)
+    })
+
+    function lista (estado) {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            dataType:   'JSON',
+            type:       'POST',
+            data:       {
+                accion: 'lista',
+                estado: JSON.parse(estado)
+            }
+        }).done(function (data) {
+            $('#lista-productos').html('')
+            $.each(data.productos, function(index, producto) {
+                let boton = `
+                    <button class="btn btn-danger" onclick="deshabilitar(${producto.id})">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                `
+                if (!JSON.parse($('#estado').val())) {
+                    boton = `
+                        <button class="btn btn-success" onclick="habilitar(${producto.id})">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                    `
+                }
+                $('#lista-productos').append(`
+                    <tr>
+                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="ver(${producto.id})">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="editar(${producto.id})">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        ${boton}
+                    </td>
+                    </tr>
+                `)
+            })
+        })
+    }
+
+    function buscar(buscar) {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            dataType:   'JSON',
+            type:       'POST',
+            data:       {
+                accion: 'buscar',
+                estado: JSON.parse($('#estado').val()), 
+                buscar: buscar
+            }
+        }).then((data) => {
+            $('#lista-productos').html('')
+            $.each(data.productos, (index, producto) => {
+                let boton = `
+                    <a class="btn btn-danger" href="../info/${producto.id}">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                `
+                if (!JSON.parse($('#estado').val())) {
+                    boton = `
+                        <a class="btn btn-success" href="../info/${producto.id}">
+                            <i class="bi bi-check-circle"></i>
+                        </a>
+                    `
+                }
+                $('#lista-productos').append(`
+                    <tr>
+                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="ver(${producto.id})">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="editar(${producto.id})">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        ${boton}
+                    </td>
+                    </tr>
+                `)
+            })
+        })
+    }
+
+    function nuevo_producto () {
+        formulario()
+        marcas()
+    }
+
+    function guardar () {
+        let accion = 'crear_producto'
+        if ($('#id').val() !== '') {
+            accion = 'editar_producto'
+        }
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            dataType:   'JSON',
+            type:       'POST',
+            data:       {
+                accion:         accion,
+                id:             $('#id').val(),
+                codigo:         $('#codigo').val(),
+                marca:          $('#marca').val(),
+                nombre:         $('#nombre').val(),
+                presentacion:   $('#presentacion').val(),
+                descripcion:    $('#descripcion').val(),
+                precio:         $('#precio').val()
+            }
+        }).then((respuesta) => {
+            mensaje('fa fa-circle-check', 'Guardar Producto', 'green', respuesta.message)
+            $('#producto-modal').modal('toggle')
+            lista(JSON.parse($('#estado').val()))
+        }).catch((error) => {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-check', 'Error al Guardar Producto', 'red', respuesta.message)
+        })
+    }
+
+    function formulario () {
+        let formulario = `
+            <form>
+                <input id="id" name="id" hidden>
+                <div class="form-floating mb-2">
+                    <input type="text" name="codigo" id="codigo" class="form-control" placeholder="codigo">
+                    <label for="codigo"><i class="bi bi-upc"></i> Código</label>
+                </div>
+                <div class="form-floating my-2">
+                    <select name="marca" id="marca" class="form-select" placeholder="marca"></select>
+                    <label for="marca"><i class="bi bi-building"></i> Marca</label>
+                </div>
+                <div class="form-floating my-2">
+                    <input type="text" name="nombre" id="nombre" class="form-control" placeholder="nombre">
+                    <label for="nombre"><i class="bi bi-info-circle"></i> Nombre</label>
+                </div>
+                <div class="form-floating my-2">
+                    <input type="text" name="presentacion" id="presentacion" class="form-control" placeholder="presentacion">
+                    <label for="presentacion"><i class="bi bi-box-seam"></i> Presentación</label>
+                </div>
+                <div class="form-floating my-2">
+                    <textarea style="height: 120px;" name="descripcion" id="descripcion" class="form-control" placeholder="descripcion"></textarea>
+                    <label for="descripcion"><i class="bi bi-card-text"></i> Descripcion</label>
+                </div>
+                <div class="form-floating my-2">
+                    <input type="text" name="precio" id="precio"" class="form-control" placeholder="precio">
+                    <label for="precio"><i class="bi bi-cash-coin"></i> Precio</label>
+                </div>
+                <button type="button" class="btn btn-primary form-control mt-3" onclick="guardar()">Guardar</button>
+            </form>
+        `
+        $('.modal-body').html(formulario)
+        $('#producto-modal').modal('toggle')
+    }
+
+    function marcas () {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'lista',
+                estado:     true
+            }
+        }).then((respuesta) => {
+            $('#marca').append('<option value="0" selected>[Seleccione una Marca]</option>')
+            let marcas = respuesta.marcas
+            $.each(marcas, (index, marca) => {
+                $('#marca').append(`
+                    <option value="${marca.id}">${marca.nombre}</option>
+                `)
+            })
+        }).catch((error) => {
+                let respuesta = JSON.parse(error.responseText)
+                mensaje('fa fa-circle-xmark', 'Error', 'red', respuesta.message)
+        })
+    }
+
+    function ver (id) {
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_producto',
+                id:         id
+            }
+        }).then((respuesta) => {
+                informacion(respuesta)
+        }).catch((error) => {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error', 'red', respuesta.message)
+        })
+    }
+
+    function deshabilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Deshabilitar Producto',
+            type:               'orange',
+            content:            '¿Desea deshabilitar el producto?',
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Sí:     function () {
+                    deshabilitar_producto(id)
+                },
+                No:     function () {}
+            }
+        })
+    }
+
+    function habilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Habilitar Producto',
+            type:               'orange',
+            content:            '¿Desea habilitar el producto?',
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Sí:     function () {
+                    habilitar_producto(id)
+                },
+                No:     function () {}
+            }
+        })
+    }
+    
+    function deshabilitar_producto (id) {
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion: 'deshabilitar_producto',
+                id:     id
+            }
+        }).then(function (respuesta) {
+            lista(JSON.parse($('#estado').val()))
+            mensaje('fa fa-circle-check', 'Deshabilitar Producto', 'green', respuesta.message)
+        }).catch(function (error) {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Deshabilitar Producto', 'red', respuesta.message)
+        })
+    }
+
+    function habilitar_producto (id) {
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion: 'habilitar_producto',
+                id:     id
+            }
+        }).then(function (respuesta) {
+            lista(JSON.parse($('#estado').val()))
+            mensaje('fa fa-circle-check', 'Habilitar Producto', 'green', respuesta.message)
+        }).catch(function (error) {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Habilitar Producto', 'red', respuesta.message)
+        })
+    }
+
+    function editar (id) {
+        $.ajax({
+            url:        '{% url "gestion_productos" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_producto',
+                id:         id
+            }
+        }).then((respuesta) => {
+            let producto = respuesta.producto
+            formulario()
+            marcas()
+            setTimeout(() => {
+                $('#id').val(producto.id)
+                $('#codigo').val(producto.codigo)
+                $('#marca').val(producto.marca)
+                $('#nombre').val(producto.nombre)
+                $('#presentacion').val(producto.presentacion)
+                $('#descripcion').val(producto.descripcion)
+                $('#precio').val(producto.precio)
+                }, 100)
+        }).catch((error) => {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error', 'red', respuesta.message)
+        })
+    }
+
+    function informacion (datos) {
+        let estado = 'Deshabilitado'
+        if (datos.producto.estado) {
+            estado = 'Habilitado'
+        }
+        let marca = datos.marcas.find(item => item.id == datos.producto.marca)
+        $('.modal-body').html(`
+            <h4>Estado</h4>
+            <h5  class="text-black-50">${estado}</h5>
+            <h4>Codigo</h4>
+            <h5  class="text-black-50">${datos.producto.codigo}</h5>
+            <h4>Nombre</h4>
+            <h5  class="text-black-50">${datos.producto.nombre}</h5>
+            <h4>Marca</h4>
+            <h5  class="text-black-50">${marca.nombre}</h5>
+            <h4>Descripción</h4>
+            <h5  class="text-black-50">${datos.producto.descripcion}</h5>
+            <h4>Precio</h4>
+            <h5  class="text-black-50">${datos.producto.precio}</h5>
+            <h4>Stock</h4>
+            <h5  class="text-black-50">${datos.producto.stock}</h5>            
+        `)
+        $('#producto-modal').modal('toggle')
+    }
+
+    function mensaje (icono, titulo, color, mensaje) {
+        $.alert({
+            icon:                   icono,
+            type:                   color,
+            title:                  titulo,
+            content:                mensaje,
+            theme:                  'modern',
+            animateFromElemente:    false,
+            buttons:                {
+                Cerrar:     () => {}
+            }
+        })
+    }
+ </script>

@@ -14,27 +14,33 @@
         <div class="row my-5 pt-5">
             <div class="d-flex justify-content-between mb-3">
                 <h1>Lista de Productos</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#producto-modal">
-                    <i class="bi bi-plus-circle"></i>
+                <button class="btn btn-primary px-5" onclick="nuevo_producto()">
+                    <i class="bi bi-plus-circle"></i> Nuevo
                 </button>
+            </div>
+            <div class="row my-3 px-0">
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" name="buscar" id="buscar" class="form-control" placeholder="buscar" onkeyup="buscar(this.value)">
+                        <label for="buscar"><i class="bi bi-search"></i> Buscar</label>
+                    </div>
+                </div>
+                <div class="col pe-0">
+                    <div class="form-floating">
+                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="lista(this.value)">
+                            <option value="true">Productos Habilitados</option>
+                            <option value="false">Productos Deshabilitados</option>
+                        </select>
+                        <label for="estado">Estado</label>
+                    </div>
+                </div>
             </div>
             <table class="table table-borderless table-hover border">
                 <thead class="table-dark">
                     <th>Productos</th>
-                    <th style="width: 100px;">Opciones</th>
+                    <th style="width: 160px;">Opciones</th>
                 </thead>
-                <tbody id="lista-productos">
-                    {% for producto in productos %}
-                    <tr>
-                        <td style="vertical-align: middle;">{{producto}}</td>
-                        <td>
-                            <a class="btn btn-primary" href="../info/{{producto.id}}">
-                                <i class="bi bi-info-circle"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                <tbody id="lista-productos"></tbody>
             </table>
         </div>
     </div>
@@ -47,44 +53,9 @@
                     <h1 class="modal-title fs-5" id="encabezado">Información del Producto</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="formulario" action="http://localhost:8000/productos/crear/" method="POST">
-                        {% csrf_token %}
-                        <div class="form-floating mb-2">
-                            <input type="text" name="codigo" id="codigo" class="form-control" placeholder="codigo">
-                            <label for="codigo"><i class="bi bi-upc"></i> Código</label>
-                        </div>
-                        <div class="form-floating my-2">
-                            <select name="marca" id="marca" class="form-select" placeholder="marca">
-                                <option value="0">[Seleccione una marca.]</option>
-                                {% for marca in marcas %}
-                                <option value="{{marca.id}}">{{marca.nombre}}</option>
-                                {% endfor %}
-                            </select>
-                            <label for="marca"><i class="bi bi-building"></i> Marca</label>
-                        </div>
-                        <div class="form-floating my-2">
-                            <input type="text" name="nombre" id="nombre" class="form-control" placeholder="nombre">
-                            <label for="nombre"><i class="bi bi-info-circle"></i> Nombre</label>
-                        </div>
-                        <div class="form-floating my-2">
-                            <input type="text" name="presentacion" id="presentacion" class="form-control" placeholder="presentacion">
-                            <label for="presentacion"><i class="bi bi-box-seam"></i> Presentación</label>
-                        </div>
-                        <div class="form-floating my-2">
-                            <textarea style="height: 120px;" name="descripcion" id="descripcion" class="form-control" placeholder="descripcion"></textarea>
-                            <label for="descripcion"><i class="bi bi-card-text"></i> Descripcion</label>
-                        </div>
-                        <div class="form-floating my-2">
-                            <input type="text" name="precio" id="precio"" class="form-control" placeholder="precio">
-                            <label for="precio"><i class="bi bi-cash-coin"></i> Precio</label>
-                        </div>
-                        <!-- <button type="submit" class="btn btn-primary form-control mt-3"><i class="bi bi-floppy"></i> Guardar</button> -->
-                        <button type="button" class="btn btn-secondary form-control mt-3" onclick="crear()">Guardar</button>
-                    </form>
-                </div>
+                <div class="modal-body"></div>
                 <div class="modal-footer">
-                    <p class="text-black-50 text-center">Comercial Rebequita</p>
+                    <p class="text-black-50 text-center">Comercial Raquelita</p>
                     
                 </div>
             </div>
@@ -92,84 +63,5 @@
     </div>
 </body>
     {% include 'includes/scripts.html' %}    
-    
-     <script>
-        $(document).ready(function () {
-            cargar()
-        })
-        function cargar () {
-            $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-                }
-            });
-            $.ajax({
-                url:        '{% url "gestion_productos" %}',
-                dataType:   'JSON',
-                type:       'POST',
-                data:       {
-                    accion: 'lista',
-                    estado: true
-                }
-            }).done(function (data) {
-                $('#lista-productos').html('')
-                $.each(data.productos, function(index, producto) {
-                    $('#lista-productos').append(`
-                        <tr>
-                            <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
-                        <td>
-                            <a class="btn btn-primary" href="../info/${producto.id}">
-                                <i class="bi bi-info-circle"></i>
-                            </a>
-                        </td>
-                        </tr>
-                    `)
-                })
-            })
-        }
-
-        function crear () {
-            $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-                }
-            });
-            $.ajax({
-                url:        '{% url "gestion_productos" %}',
-                dataType:   'JSON',
-                type:       'POST',
-                data:       {
-                    accion:         'crear_producto',
-                    codigo:         $('#codigo').val(),
-                    marca:          $('#marca').val(),
-                    nombre:         $('#nombre').val(),
-                    presentacion:   $('#presentacion').val(),
-                    descripcion:    $('#descripcion').val(),
-                    precio:         $('#precio').val()
-                }
-            }).done(function (data) {
-                let color   =   'green'
-                if (!data.success) {
-                    color   =   'red'
-                } else {
-                    $('#myForm').find('input, textarea, select').each(function() {
-                        $(this).val('');
-                    });
-                    $('#producto-modal').modal('toggle')
-                    cargar()
-                }
-                $.alert({
-                    title:                  'Crear Producto',
-                    content:                data.message,
-                    type:                   color,
-                    icon:                   'fa-circle-check',
-                    theme:                  'modern',
-                    animateFromElemente:    false,
-                    buttons:                {
-                        Acpetar:            function () {}
-                    }
-                })
-            })
-        }
-     </script>
+    {% include 'includes/productos/js-productos.html' %}
 </html>
