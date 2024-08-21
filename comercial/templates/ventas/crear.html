@@ -20,13 +20,92 @@
                         </div>
                     </div>
                     <div class="col">
-                        <select name="cliente" id="cliente" class="form-select" placeholder="cliente"></select>
-                        <label for="cliente">Cliente</label>
+                    <div class="input-group">
+                        <div class="form-floating">
+                            <input type="text" name="cliente" id="cliente" class="form-control" placeholder="cliente" list="clientes" onchange="datos_cliente(this.value)">
+                            <label for="cliente">Cliente</label>
+                            <datalist id="clientes"></datalist>
+                        </div>
+                        <button class="btn btn-primary" onclick="nuevo_cliente()"><i class="bi bi-plus-circle"></i> Nuevo Cliente</button>
+                        
+                    </div>
+                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="text" name="nombre-completo" id="nombre-completo" class="form-control" placeholder="nombre-completo" disabled>
+                            <label for="nombre-completo">Nombre Completo</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="text" name="mostrar-direccion" id="mostrar-direccion" class="form-control" placeholder="mostrar-direccion" disabled>
+                            <label for="mostrar-direccion">Dirección</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="tel" name="mostrar-telefono" id="mostrar-telefono" class="form-control" placeholder="mostrar-telefono" disabled>
+                            <label for="mostrar-telefono">Teléfono</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="text" name="mostrar-celular" id="mostrar-celular" class="form-control" placeholder="mostrar-celular" disabled>
+                            <label for="mostrar-celular">Celular</label>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="row">
+            <table class="table table-borderless table-hover border">
+                <thead class="table-dark">
+                    <th style="width: 60px;">#</th>
+                    <th>Productos</th>
+                    <th style="width: 100px; text-align: center;">Cantidad</th>
+                    <th style="width: 100px; text-align: center;">Precio U.</th>
+                    <th style="width: 100px; text-align: center;">Sub-Total</th>
+                    <th style="width: 80px; text-align: center;">···</th>
+                </thead>
+                <tbody id="lista-productos"></tbody>
+            </table>
+        </div>
+        <div class="row my-3">
+            <div class="col"></div>
+            <div class="col"></div>
+            <div class="col"></div>
+            <div class="col">
+                <div class="form-floating">
+                    <input type="text" name="total" id="total" class="form-control" placeholder="total" readonly>
+                    <label for="total">Total $</label>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal-ventas" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="etiqueta-modal-ventas" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="etiqueta-modal-ventas">...</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    Comercial Raquelita
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
 </body>
     {% include 'includes/scripts.html' %}
+    {% include 'includes/ventas/js-ventas.html' %}
 </html>

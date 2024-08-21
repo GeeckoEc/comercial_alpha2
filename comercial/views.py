@@ -30,6 +30,10 @@ class ProveedorSerializer(serializers.ModelSerializer):
         model = Proveedor
         fields = '__all__'
 
+class ClienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cliente
+        fields = '__all__'
 
 def index (request):
     return render(request, 'index.html')
@@ -193,7 +197,7 @@ def gestion_compras (request):
             try:
                 compra = Compra()
                 compra.factura      =   request.POST['factura']
-                compra.proveedor    =   request.POST['proveedor']
+                compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
                 compra.fecha        =   datetime.now()
                 compra.total        =   request.POST['total']
                 compra.save()
@@ -378,6 +382,58 @@ def gestion_ventas (request):
             contenido = {
                 'success': True,
                 'message': 'La venta fue creada correctamente.',
+            }
+            return JsonResponse(contenido, status=201)
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+def lista_clientes (request):
+    contenido = {}
+    return render(request, 'clientes/lista.html', contenido)
+
+def gestion_clientes (request):
+    if request.method == 'POST':
+        if request.POST['accion'] == 'lista_clientes':
+            try:
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                clientes = Cliente.objects.filter(estado=estado)
+                lista_clientes = ClienteSerializer(clientes, many=True)
+                contenido   = {
+                    'clientes': lista_clientes.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al listar clientes: {}'.format(str(e))
+                }
+        elif request.POST['accion'] == 'datos_cliente':
+            cliente = Cliente.objects.get(identificacion=request.POST['identificacion'])
+            cliente_serializer = ClienteSerializer(cliente)
+            contenido = {
+                'cliente': cliente_serializer.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'crear_cliente':
+            cliente = Cliente()
+            cliente.nombre          =   request.POST['nombre']
+            cliente.apellido        =   request.POST['apellido']
+            cliente.tipo_identificacion  =   request.POST['tipo_identificacion']
+            cliente.identificacion  =   request.POST['identificacion']
+            cliente.direccion       =   request.POST['direccion']
+            cliente.ciudad          =   request.POST['ciudad']
+            cliente.telefono        =   request.POST['telefono']
+            cliente.celular         =   request.POST['celular']
+            cliente.correo          =   request.POST['correo']
+            cliente.save()
+            contenido = {
+                'success': True,
+                'message': 'El cliente fue creado correctamente.',
+                'identificacion': ClienteSerializer(cliente).data['identificacion']
             }
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
