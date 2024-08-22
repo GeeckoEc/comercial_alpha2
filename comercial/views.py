@@ -356,6 +356,28 @@ def gestion_marcas (request):
                     'message': 'Error al mostrar la marcas: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'buscar_marcas':
+            try:
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                marcas = Marca.objects.filter(estado=estado).filter(
+                    Q(nombre__icontains=request.POST['buscar']) |
+                    Q(descripcion__icontains=request.POST['buscar'])
+                )
+                lista_marcas = MarcaSerializer(marcas, many=True)
+                contenido   = {
+                    'marcas': lista_marcas.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except  Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al buscar las marcas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'info_marca':
             try:
                 marca = Marca.objects.get(id=request.POST['id'])

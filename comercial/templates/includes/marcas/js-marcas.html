@@ -25,6 +25,24 @@
         })
     }
 
+    function buscar (buscar) {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'buscar_marcas',
+                buscar:     buscar,
+                estado:     JSON.parse($('#estado').val())
+            }
+        }).then((respuesta)=>{
+            lista(respuesta.marcas)
+        }).catch((error)=> {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Buscar Marcas', 'red', respuesta.message)
+        })
+    }
+
     function nuevo () {
         formulario('Nueva Marca')
     }
