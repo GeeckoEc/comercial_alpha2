@@ -1,0 +1,232 @@
+<script>
+    $(document).ready(() => {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        cargar()
+    })
+
+    function cargar () {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'lista_marcas',
+                estado:     JSON.parse($('#estado').val())
+            }
+        }).then((respuesta) => {
+            lista(respuesta.marcas)
+        }).catch((error) => {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Listar Marcas', red, respuesta.message)
+        })
+    }
+
+    function nuevo () {
+        formulario('Nueva Marca')
+    }
+
+    function ver (id) {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_marca',
+                id:         id
+            }
+        }).then((respuesta) => {
+            informacion(respuesta.marca)
+        }).catch((error) => {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Obtener Marca', red, respuesta.message)
+        })
+    }
+
+    function editar (id) {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_marca',
+                id:         id
+            }
+        }).then((respuesta) => {
+            formulario('Editar Marca')
+            $('#id').val(respuesta.marca.id)
+            $('#nombre').val(respuesta.marca.nombre)
+            $('#descripcion').val(respuesta.marca.descripcion)
+
+        }).catch((error) => {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Obtener Marca', red, respuesta.message)
+        })
+    }
+
+    function deshabilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Deshabilitar Marca',
+            type:               'orange',
+            content:            '¿Desea deshabilitar la marca?',
+            theme:              'modern',
+            animateFromElemente:    false,
+            buttons: {
+                Sí:     ()=>{
+                    cambiar_estado(id, JSON.parse($('#estado').val()))
+                },
+                No:     ()=>{}
+            }
+        })
+    }
+
+    function habilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Habilitar Marca',
+            type:               'orange',
+            content:            '¿Desea habilitar la marca?',
+            theme:              'modern',
+            animateFromElemente:    false,
+            buttons: {
+                Sí:     ()=>{
+                    cambiar_estado(id, JSON.parse($('#estado').val()))
+                },
+                No:     ()=>{}
+            }
+        })
+    }
+
+    function guardar () {
+        let accion = 'crear_marca'
+        if ($('#id').val() !== '') {
+            accion = 'editar_marca'
+        }
+        $.ajax({
+            url:        '{%  url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:      accion,
+                id:          $('#id').val(),
+                nombre:      $('#nombre').val(),
+                descripcion: $('#descripcion').val(),
+            }
+        }).then((respuesta) => {
+            $('#modal').modal('toggle')
+            cargar()
+            mensaje('fa fa-circle-check', 'Guardar Marca', 'green', respuesta.message)
+        }).catch((error) => {
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Guardar Marca', 'red', respuesta.message)
+        })
+    }
+
+    function cambiar_estado (id, estado) {
+        $.ajax({
+            url:        '{% url "gestion_marcas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'cambiar_estado',
+                id:         id,
+                estado:     !estado
+            }
+        }).then((respuesta)=>{
+            let operacion   =   'Habilitar'
+            if (estado) {
+                operacion   =   'Deshabilitar'
+            }
+            mensaje('fa fa-circle-check', operacion + ' Marca', 'green', respuesta.message)
+            cargar()
+        }).catch((error)=>{
+            let operacion   =   'Habilitar'
+            if (estado) {
+                operacion   =   'Deshabilitar'
+            }
+            let respuesta   =   JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al '+ operacion +' Marca', 'red', respuesta.message)
+        })
+    }
+
+    function formulario (titulo) {
+        $('.modal-body').html(`
+            <form>
+                <input type="text" id="id" name="id" hidden>
+                <div class="form-floating mb-3">
+                    <input  type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre">
+                    <label for="nombre">Nombre</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea style="height: 200px;" id="descripcion" name="descripcion" class="form-control" placeholder="Descripción"></textarea>
+                    <label for="descripcion">Descripción</label>
+                </div>
+                <button class="btn btn-primary form-control" type="button" onclick="guardar()"><i class="bi bi-floppy"></i> Guardar</button>
+            </form>
+        `)
+        $('#etiqueta-modal').html(titulo)
+        $('#modal').modal('toggle')
+    }
+
+    function informacion (datos) {
+        let estado  =    'Deshabilitado'
+        if(JSON.parse(datos.estado)) {
+            estado  =   'Habilitado'
+        }
+        $('.modal-body').html(`
+            <h4>Estado</h4>
+            <h5 class="text-black-50">${estado}</h5>
+            <h4>Nombre</h4>
+            <h5 class="text-black-50">${datos.nombre}</h5>
+            <h4>Descripcion</h4>
+            <h5 class="text-black-50">${datos.descripcion}</h5>
+        `)
+        $('#etiqueta-modal').html('Información de la Marca')
+        $('#modal').modal('toggle')
+    }
+
+    function lista (datos) {
+        let ancho_descripcion = $('#ancho-descripcion').width()
+        let ancho_texto = Math.floor(ancho_descripcion/8.3)
+        $('#lista-marcas').html('')
+        $.each(datos, (index, marca) => {
+            let boton = `<button type="button" class="btn btn-success" onclick="habilitar(${marca.id})"><i class="bi bi-check-circle"></i></button>`
+            if (JSON.parse($('#estado').val())) {
+                boton = `<button type="button" class="btn btn-danger" onclick="deshabilitar(${marca.id})"><i class="bi bi-x-circle"></i></button>`
+            }
+            let descripcion = marca.descripcion
+            if (descripcion.length > ancho_texto) {
+                descripcion = descripcion.substring(0, ancho_texto) + '...'
+            }
+            $('#lista-marcas').append(`
+                <tr>
+                    <td style="vertical-align: middle;">${marca.nombre}</td>
+                    <td style="vertical-align: middle;">${descripcion}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary" onclick="ver(${marca.id})"><i class="bi bi-info-circle"></i></button>
+                        <button type="button" class="btn btn-primary" onclick="editar(${marca.id})"><i class="bi bi-pencil-square"></i></button>
+                        ${boton}
+                    </td>
+                </tr>
+            `)
+        })
+    }
+
+    function mensaje (icono, titulo, color, mensaje) {
+        $.alert({
+            icon:                   icono,
+            type:                   color,
+            title:                  titulo,
+            content:                mensaje,
+            theme:                  'modern',
+            animateFromElemente:    false,
+            buttons:                {
+                Cerrar:     () => {}
+            }
+        })
+    }
+</script>

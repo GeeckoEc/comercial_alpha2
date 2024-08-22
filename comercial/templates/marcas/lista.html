@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcas</title>
+    {% include 'includes/header.html' %}
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+    <div class="container">
+        <div class="row my-5 pt-5">
+            <div class="d-flex justify-content-between mb-3">
+                <h1>Marcas</h1>
+                <button type="button" class="btn btn-primary px-5" onclick="nuevo()"><i class="bi bi-plus-circle"></i> Nueva</button>
+            </div>
+            <div class="row mb-3 px-0">
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" name="buscar" id="buscar" class="form-control" placeholder="buscar">
+                        <label for="buscar"><i class="bi bi-search"></i> Buscar</label>
+                    </div>
+                </div>
+                <div class="col pe-0">
+                    <div class="form-floating">
+                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="cargar()">
+                            <option value="true">Marcas Habilitadas</option>
+                            <option value="false">Marcas Deshabilitadas</option>
+                        </select>
+                        <label for="estado">Estado</label>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-borderless table-hover border">
+                <thead class="table-dark">
+                    <th style="width: 300px;">Marcas</th>
+                    <th id="ancho-descripcion">Descripcion</th>
+                    <th style="width: 160px; text-align: center;">···</th>
+                </thead>
+                <tbody id="lista-marcas"></tbody>
+            </table>
+        </div>
+    </div>
+    {% include 'includes/modal.html' %}
+</body>
+    {% include 'includes/scripts.html' %}
+    {% include 'includes/marcas/js-marcas.html' %}
+</html>

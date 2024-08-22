@@ -337,7 +337,7 @@ def lista_marcas (request):
 
 def gestion_marcas (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'lista':
+        if request.POST['accion'] == 'lista_marcas':
             try:
                 if request.POST['estado'].lower() == 'true':
                     estado = True
@@ -354,6 +354,75 @@ def gestion_marcas (request):
                 response_data = {
                     'success': False,
                     'message': 'Error al mostrar la marcas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'info_marca':
+            try:
+                marca = Marca.objects.get(id=request.POST['id'])
+                lista_marca = MarcaSerializer(marca)
+                contenido   = {
+                    'marca': lista_marca.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al mostrar la marca: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'crear_marca':
+            try:
+                marca = Marca()
+                marca.nombre = request.POST['nombre']
+                marca.descripcion = request.POST['descripcion']
+                marca.save()
+                contenido = {
+                    'success': True,
+                    'message': 'La marca fue creada correctamente.',
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al crear la marca: {}'.format(str(e))
+                }
+        elif request.POST['accion'] == 'editar_marca':
+            try:
+                marca = Marca.objects.get(id=request.POST['id'])
+                marca.nombre = request.POST['nombre']
+                marca.descripcion = request.POST['descripcion']
+                marca.save()
+                contenido = {
+                    'success': True,
+                    'message': 'La marca fue editada correctamente.',
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al editar la marca: {}'.format(str(e))
+                }
+        elif request.POST['accion'] == 'cambiar_estado':
+            try:
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                    operacion = 'habilitada'
+                else:
+                    estado = False
+                    operacion = 'deshabilitada'
+                marca = Marca.objects.get(id=request.POST['id'])
+                marca.estado = estado
+                marca.save()
+                contenido   = {
+                    'success': True,
+                    'message': f'La marca ha sido {operacion} correctamente'
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al cambiar el estado de la marca: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
