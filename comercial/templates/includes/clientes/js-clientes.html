@@ -1,0 +1,309 @@
+<script>
+    $(document).ready(()=>{
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        cargar()
+    })
+
+    function cargar () {
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'lista_clientes',
+                estado:     JSON.parse($('#estado').val()),
+            }
+        }).then((respuesta)=>{
+            lista(respuesta.clientes)
+        }).catch((error)=>{
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark')
+        })
+    }
+
+    function buscar (buscar) {
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'buscar',
+                buscar:     buscar,
+                estado:     JSON.parse($('#estado').val()),
+            }
+        }).then((respuesta)=>{
+            lista(respuesta.clientes)
+        }).catch((error)=>{
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Erro al Buscar Clientes', 'red', respuesta.message)
+        })
+    }
+
+    function nuevo () {
+        $('#etiqueta-modal').html('Nuevo Cliente')
+        formulario()
+    }
+
+    function ver (id) {
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_cliente',
+                id:         id,
+            }
+        }).then((respuesta)=>{
+            $('#etiqueta-modal').html('Información del Cliente')
+            informacion(respuesta.cliente)
+        }).catch((error)=>{
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Obtener Datos del Cliente', 'red', respuesta.message)
+        })
+    }
+
+    function editar (id) {
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_cliente',
+                id:         id,
+            }
+        }).then((respuesta)=>{
+            $('#etiqueta-modal').html('Editar Cliente')
+            formulario()
+            $('#id').val(respuesta.cliente.id)
+            $('#nombre').val(respuesta.cliente.nombre)
+            $('#apellido').val(respuesta.cliente.apellido)
+            $('#tipo_identificacion').val(respuesta.cliente.tipo_identificacion)
+            $('#identificacion').val(respuesta.cliente.identificacion)
+            $('#direccion').val(respuesta.cliente.direccion)
+            $('#ciudad').val(respuesta.cliente.ciudad)
+            $('#telefono').val(respuesta.cliente.telefono)
+            $('#celular').val(respuesta.cliente.celular)
+            $('#correo').val(respuesta.cliente.correo)
+        }).catch((error)=>{
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Obtener Datos del Cliente', 'red', respuesta.message)
+        })
+    }
+
+    function guardar () {
+        let accion  =   'crear_cliente'
+        if ($('#id').val()  !==  '') {
+            accion  =   'editar_cliente'
+        }
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:                 accion,
+                id:                     $('#id').val(),
+                nombre:                 $('#nombre').val(),
+                apellido:               $('#apellido').val(),
+                tipo_identificacion:    $('#tipo_identificacion').val(),
+                identificacion:         $('#identificacion').val(),
+                direccion:              $('#direccion').val(),
+                ciudad:                 $('#ciudad').val(),
+                telefono:               $('#telefono').val(),
+                celular:                $('#celular').val(),
+                correo:                 $('#correo').val(),
+            }
+        }).then((respuesta) => {
+            $('#modal').modal('toggle')
+            mensaje('fa fa-circle-check', 'Guardar Cliente', 'green', respuesta.message)
+            cargar()
+        }).catch((error) => {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark', 'Error al Guardar Cliente', 'red', respuesta.message)
+        })
+    }
+
+    function deshabilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Deshabilitar Cliente',
+            content:            '¿Desea deshabilitar el cliente?',
+            type:               'orange',
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Sí:         () => {
+                    cambiar_estado(id)
+                },
+                No:         () => {}
+            }
+
+        })
+    }
+
+    function habilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Habilitar Cliente',
+            content:            '¿Desea habilitar el cliente?',
+            type:               'red',
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Sí:         () => {
+                    cambiar_estado(id)
+                },
+                No:         () => {}
+            }
+
+        })
+    }
+
+    function cambiar_estado (id) {
+        $.ajax({
+            url:        '{% url "gestion_clientes" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'cambiar_estado',
+                id:         id,
+                estado:     !JSON.parse($('#estado').val())
+            }
+        }).then((respuesta)=>{
+            let estado =  JSON.parse($('#estado').val())
+            let operacion   =   'Habilitar'
+            if (estado) {
+                operacion   =   'Deshabilitar'
+            }
+            mensaje('fa fa-circle-check', operacion + ' Cliente', 'green', respuesta.message)
+            cargar()
+        }).catch((error)=>{
+            let respuesta = JSON.parse(error.responseText)
+            mensaje()
+        })
+    }
+
+    function formulario () {
+        $('.modal-body').html(`
+            <form>
+                <input type="text" id="id" name="id" hidden>
+                <div class="form-floating mb-3">
+                    <input type="text" name="nombre" id="nombre" class="form-control" placeholder="nombre">
+                    <label for="nombre">Nombres</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="apellido" id="apellido" class="form-control" placeholder="apellido">
+                    <label for="apellido">Apellidos</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select name="tipo_identificacion" id="tipo_identificacion" class="form-select" placeholder="tipo_identificacion">
+                        <option value="0">[Seleccione un tipo de Identificación]</option>
+                        <option value="cedula">Cédula</option>
+                        <option value="ruc">RUC</option>
+                    </select>
+                    <label for="tipo_identificacion">Tipo de Identificación</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="identificacion" id="identificacion" class="form-control" placeholder="identificacion">
+                    <label for="identificacion">Identificación</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="direccion" id="direccion" class="form-control" placeholder="direccion">
+                    <label for="direccion">Direccion</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="ciudad" id="ciudad" class="form-control" placeholder="ciudad">
+                    <label for="ciudad">Ciudad</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="telefono" id="telefono" class="form-control" placeholder="telefono">
+                    <label for="telefono">Teléfono</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" name="celular" id="celular" class="form-control" placeholder="celular">
+                    <label for="celular">Celular</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" name="correo" id="correo" class="form-control" placeholder="correo">
+                    <label for="correo">Correo</label>
+                </div>
+                <button type="button" class="btn btn-primary form-control" onclick="guardar()"><i class="bi bi-floppy"></i> Guardar</button>
+            </form>
+        `)
+        $('#modal').modal('toggle')
+    }
+
+    function informacion (datos) {
+        let estado = 'Deshabilitado'
+        if (JSON.parse(datos.id)) {
+            estado = 'Habilitado'
+        }
+        let tipo = 'RUC'
+        if (datos.tipo_identificacion == 'cedula') {
+            tipo = 'Cédula'
+        }
+        $('.modal-body').html(`
+            <h4>Estado</h4>
+            <p class="text-justify">${estado}</p>
+            <h4>Nombres</h4>
+            <p class="text-justify">${datos.nombre}</p>
+            <h4>Apellidos</h4>
+            <p class="text-justify">${datos.apellido}</p>
+            <h4>Tipo de Identificación</h4>
+            <p class="text-justify">${tipo}</p>
+            <h4>Número de Identificación</h4>
+            <p class="text-justify">${datos.identificacion}</p>
+            <h4>Dirección</h4>
+            <p class="text-justify">${datos.direccion}</p>
+            <h4>Ciudad</h4>
+            <p class="text-justify">${datos.ciudad}</p>
+            <h4>Teléfono</h4>
+            <p class="text-justify">${datos.telefono}</p>
+            <h4>Celular</h4>
+            <p class="text-justify">${datos.celular}</p>
+            <h4>Correo Electrónico</h4>
+            <p class="text-justify">${datos.correo}</p>
+        `)
+        $('#modal').modal('toggle')
+    }
+
+    function lista (datos) {
+        $('#lista-clientes').html('')
+        $.each(datos, (index, cliente)=> {
+            let boton   =   `<button class="btn btn-success" onclick="habilitar(${cliente.id})"><i class="bi bi-check-circle"></i></button>`
+            if (JSON.parse($('#estado').val())) {
+                boton   =   `<button class="btn btn-danger" onclick="deshabilitar(${cliente.id})"><i class="bi bi-x-circle"></i></button>`
+            }
+            $('#lista-clientes').append(`
+                <tr>
+                    <td style="vertical-align: middle;">${cliente.nombre} ${cliente.apellido}</td>
+                    <td style="vertical-align: middle;">${cliente.identificacion}</td>
+                    <td style="vertical-align: middle;">${cliente.celular}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary" onclick="ver(${cliente.id})"><i class="bi bi-info-circle"></i></button>
+                        <button type="button" class="btn btn-primary" onclick="editar(${cliente.id})"><i class="bi bi-pencil-square"></i></button>
+                        ${boton}
+                    </td>
+                </tr>
+            `)
+        })
+    }
+
+    function mensaje(icono, titulo, color, mensaje) {
+        $.alert({
+            icon:               icono,
+            title:              titulo,
+            type:               color,
+            content:            mensaje,
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Cerrar:     ()=>{}
+
+            }
+        })
+    }
+</script>

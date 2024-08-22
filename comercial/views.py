@@ -509,22 +509,118 @@ def gestion_clientes (request):
                 'success': True,
             }
             return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'info_cliente':
+            try:
+                cliente = Cliente.objects.get(id=request.POST['id'])
+                lista_cliente = ClienteSerializer(cliente)
+                contenido   = {
+                    'cliente': lista_cliente.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al mostrar el cliente: {}'.format(str(e))
+                }
+        elif request.POST['accion'] == 'buscar':
+            try:
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                clientes = Cliente.objects.filter(estado=estado).filter(
+                    Q(nombre__icontains=request.POST['buscar']) |
+                    Q(apellido__icontains=request.POST['buscar']) |
+                    Q(identificacion__icontains=request.POST['buscar']) |
+                    Q(direccion__icontains=request.POST['buscar']) |
+                    Q(ciudad__icontains=request.POST['buscar']) |
+                    Q(telefono__icontains=request.POST['buscar']) |
+                    Q(celular__icontains=request.POST['buscar']) |
+                    Q(correo__icontains=request.POST['buscar'])
+                )
+                lista_clientes = ClienteSerializer(clientes, many=True)
+                contenido = {
+                    'clientes': lista_clientes.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al buscar clientes: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'crear_cliente':
-            cliente = Cliente()
-            cliente.nombre          =   request.POST['nombre']
-            cliente.apellido        =   request.POST['apellido']
-            cliente.tipo_identificacion  =   request.POST['tipo_identificacion']
-            cliente.identificacion  =   request.POST['identificacion']
-            cliente.direccion       =   request.POST['direccion']
-            cliente.ciudad          =   request.POST['ciudad']
-            cliente.telefono        =   request.POST['telefono']
-            cliente.celular         =   request.POST['celular']
-            cliente.correo          =   request.POST['correo']
-            cliente.save()
-            contenido = {
-                'success': True,
-                'message': 'El cliente fue creado correctamente.',
-                'identificacion': ClienteSerializer(cliente).data['identificacion']
-            }
-            return JsonResponse(contenido, status=201)
+            try:
+                cliente = Cliente()
+                cliente.nombre              =   request.POST['nombre']
+                cliente.apellido            =   request.POST['apellido']
+                cliente.tipo_identificacion =   request.POST['tipo_identificacion']
+                cliente.identificacion      =   request.POST['identificacion']
+                cliente.direccion           =   request.POST['direccion']
+                cliente.ciudad              =   request.POST['ciudad']
+                cliente.telefono            =   request.POST['telefono']
+                cliente.celular             =   request.POST['celular']
+                cliente.correo              =   request.POST['correo']
+                cliente.save()
+                contenido = {
+                    'success': True,
+                    'message': 'El cliente fue creado correctamente.',
+                    'identificacion': ClienteSerializer(cliente).data['identificacion']
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al crear el cliente: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'editar_cliente':
+            try:
+                cliente = Cliente.objects.get(id=request.POST['id'])
+                cliente.nombre              =   request.POST['nombre']
+                cliente.apellido            =   request.POST['apellido']
+                cliente.tipo_identificacion =   request.POST['tipo_identificacion']
+                cliente.identificacion      =   request.POST['identificacion']
+                cliente.direccion           =   request.POST['direccion']
+                cliente.ciudad              =   request.POST['ciudad']
+                cliente.telefono            =   request.POST['telefono']
+                cliente.celular             =   request.POST['celular']
+                cliente.correo              =   request.POST['correo']
+                cliente.save()
+                contenido = {
+                    'success': True,
+                    'message': 'El cliente fue editado correctamente.',
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al editar el cliente: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'cambiar_estado':
+            try:
+                if request.POST['estado'].lower() == 'true':
+                    estado = True
+                    operacion = 'habilitado'
+                else:
+                    estado = False
+                    operacion = 'deshabilitado'
+                cliente = Cliente.objects.get(id=request.POST['id'])
+                cliente.estado = estado
+                cliente.save()
+                contenido   = {
+                    'success': True,
+                    'message': f'El cliente ha sido {operacion} correctamente'
+                }
+                return JsonResponse(contenido, status=201)
+            except  Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al cambiar el estado del cliente: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)

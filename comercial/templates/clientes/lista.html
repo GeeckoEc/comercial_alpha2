@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes</title>
+    {% include 'includes/header.html' %}
+</head>
+<body>
+    {% include  'includes/menu.html' %}
+    <div class="container">
+        <div class="row my-5 pt-5">
+            <div class="d-flex justify-content-between mb-3">
+                <h1>Clientes</h1>
+                <button type="button" class="btn btn-primary px-5" onclick="nuevo()"><i class="bi bi-plus-circle"></i> Nuevo</button>
+            </div>
+            <div class="row px-0 mb-3">
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" name="buscar" id="buscar" class="form-control" placeholder="buscar" onkeyup="buscar(this.value)">
+                        <label for="buscar">Buscar</label>
+                    </div>
+                </div>
+                <div class="col pe-0">
+                    <div class="form-floating">
+                        <select name="estado" id="estado" class="form-select" onchange="cargar()">
+                            <option value="true">Clientes Habilitados</option>
+                            <option value="false">Clientes Deshabilitados</option>
+                        </select>
+                        <label for="estado">Estado</label>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-borderless table-hover border">
+                <thead class="table-dark">
+                    <th>Nombre</th>
+                    <th style="width: 120px; text-align: center;">Identificacion</th>
+                    <th style="width: 120px; text-align: center;">Celular</th>
+                    <th style="width: 160px; text-align: center;">···</th>
+                </thead>
+                <tbody id="lista-clientes"></tbody>
+            </table>
+        </div>
+    </div>
+    {% include 'includes/modal.html' %}
+</body>
+    {% include 'includes/scripts.html' %}
+    {% include 'includes/clientes/js-clientes.html' %}
+</html>
