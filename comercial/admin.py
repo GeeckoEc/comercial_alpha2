@@ -46,7 +46,6 @@ class ProductoAdmin(admin.ModelAdmin):
         'presentacion',
         'descripcion',
         'precio',
-        'stock',
     )
     list_filter = ('estado', 'marca')
 
@@ -69,10 +68,10 @@ class KardexAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'producto',
-        'detalle',
         'fecha',
+        'transaccion',
         'cantidad',
-        'saldo',
+        'costo',
         'precio',
     )
     list_filter = ('producto', 'fecha')

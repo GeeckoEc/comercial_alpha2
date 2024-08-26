@@ -35,6 +35,16 @@ class ClienteSerializer(serializers.ModelSerializer):
         model = Cliente
         fields = '__all__'
 
+class  CompraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Compra
+        fields = '__all__'
+
+class Item_CompraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item_Compra
+        fields = '__all__'
+
 def index (request):
     return render(request, 'index.html')
 
@@ -191,31 +201,65 @@ def crear_compra (request):
     contenido['proveedores']    =   Proveedor.objects.filter(estado=True)
     return render(request, 'compras/crear.html', contenido)
 
+def lista_compras (request):
+    return render(request, 'compras/lista.html')
+
 def gestion_compras (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_compra':
+        if request.POST['accion'] == 'lista_compras':
             try:
-                compra = Compra()
-                compra.factura      =   request.POST['factura']
-                compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
-                compra.fecha        =   datetime.now()
-                compra.total        =   request.POST['total']
-                compra.save()
-                for item in json.loads(request.POST['productos']):
-                    item_compra             =   Item_Compra()
-                    item_compra.compra      =   compra
-                    item_compra.producto    =   Producto.objects.get(id=item['id'])
-                    item_compra.cantidad    =   item['cantidad']
-                    item_compra.costo      =   item['precio']
-                    item_compra.save()
-                
-                return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                compras = Compra.objects.filter(estado=estado)
+                lista_compras = CompraSerializer(compras, many=True)
+                contenido   = {
+                    'compras': lista_compras.data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
             except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al listar las compras: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'crear_compra':
+            """ try: """
+            compra = Compra()
+            compra.factura      =   request.POST['factura']
+            compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
+            compra.fecha        =   datetime.now()
+            compra.total        =   request.POST['total']
+            compra.save()
+            items = json.loads(request.POST['items'])
+            for item in items:
+                item_compra             =   Item_Compra()
+                item_compra.compra      =   compra
+                item_compra.producto    =   Producto.objects.get(id=item['id'])
+                item_compra.cantidad    =   item['cantidad']
+                item_compra.costo      =   item['costo']
+                item_compra.save()
+            
+            return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
+            """ except Exception as e:
                 response_data   =   {
                     'success': False,
                     'message': 'Error al crear la compra: {}'.format(str(e))
                 }
-                return JsonResponse(response_data, status=500)
+                return JsonResponse(response_data, status=500) """
+        elif request.POST['accion'] == 'info_compra':
+            compra = Compra.objects.get(id=request.POST['id'])
+            compra_serializer = CompraSerializer(compra)
+            items = Item_Compra.objects.filter(compra=compra)
+            items_serializer = Item_CompraSerializer(items, many=True)
+            contenido = {
+                'compra': compra_serializer.data,
+                'items':  items_serializer.data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 def lista_proveedores (request):

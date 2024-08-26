@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes
+from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras
 
 urlpatterns = [
     path("", index, name="index"),
@@ -26,6 +26,7 @@ urlpatterns = [
     path('productos/lista/', lista_productos, name="lista_productos"),
     path('productos/gestion/', gestion_productos, name="gestion_productos"),
     path('compras/crear/', crear_compra, name="crear_compra"),
+    path('compras/lista', lista_compras, name="lista_compras"),
     path('gestion_compras/', gestion_compras, name="gestion_compras"),
     path('proveedores/lista', lista_proveedores, name="lista_proveedores"),
     path('proveedores/gestion', gestion_proveedores, name="gestion_proveedores"),

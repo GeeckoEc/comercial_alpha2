@@ -175,7 +175,7 @@
                         dataType:   'JSON',
                         data:       {
                             accion:     'crear_compra',
-                            productos:  JSON.parse(sessionStorage.getItem('seleccionados')),
+                            items:      JSON.stringify(JSON.parse(sessionStorage.getItem('seleccionados'))),
                             proveedor:  $('#proveedor').val(),
                             factura:    $('#factura').val(),
                             total:      $('#total').val()

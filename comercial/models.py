@@ -20,8 +20,8 @@ class Proveedor (models.Model):
 class Compra (models.Model): ## TO-DO 
     proveedor       =   models.ForeignKey(Proveedor, on_delete=models.CASCADE)
     estado          =   models.BooleanField(default=True)
-    factura         =   models.CharField(max_length=50)
-    fecha           =   models.DateField(auto_now_add=True)
+    factura         =   models.CharField(max_length=50, unique=True)
+    fecha           =   models.DateTimeField(auto_now_add=True)
     total           =   models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
@@ -45,7 +45,6 @@ class Producto (models.Model):
     presentacion    =   models.CharField(max_length=100, blank=True, null=True)
     descripcion     =   models.TextField(blank=True, null=True)
     precio          =   models.DecimalField(max_digits=10, decimal_places=2)
-    stock           =   models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.nombre} - {self.marca.nombre} - {self.presentacion} - ${self.precio} - {self.stock} unidades."
@@ -59,14 +58,14 @@ class Producto (models.Model):
         self.save()
     
     def calcular_stock (self):
-        compras = Kardex.objects.filter(detalle = 'Compra', producto = self).aggregate(Sum('cantidad'))['cantidad__sum']
-        ventas  = Kardex.objects.filter(detalle = 'Venta', producto = self).aggregate(Sum('cantidad'))['cantidad__sum']
+        compras = Kardex.objects.filter(transaccion = 'Compra', producto = self).aggregate(Sum('cantidad'))['cantidad__sum']
+        ventas  = Kardex.objects.filter(transaccion = 'Venta', producto = self).aggregate(Sum('cantidad'))['cantidad__sum']
         if compras is None: 
             compras = 0
         if ventas is None:
             ventas = 0
         self.stock = (compras - ventas)
-        self.save()
+        return self.stock
 
 
 class Item_Compra (models.Model):
@@ -84,21 +83,15 @@ class Kardex (models.Model):
     detalles        =   [('Compra','Compra'), ('Venta','Venta')]
 
     producto        =   models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='kardex')
-    detalle         =   models.CharField(max_length=20, choices=detalles, default='Compra')
-    fecha           =   models.DateField()
+    transaccion     =   models.CharField(max_length=20, choices=detalles, default='Compra')
+    fecha           =   models.DateTimeField()
     cantidad        =   models.IntegerField(default=0)
-    saldo           =   models.IntegerField(default=0)
+    costo           =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     precio          =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         ## return f"{self.producto.nombre} - {self.fecha}"
         return f"Operación: {self.detalle} - Fecha: {self.fecha} - Cantidad: {self.cantidad} - Existencias: {self.saldo}"
-    
-    def guardar_calcular_saldo(self):
-        self.save()
-        self.producto.calcular_stock()
-        self.saldo = self.producto.stock
-        self.save()
 
 
 class Cliente (models.Model):
@@ -122,8 +115,8 @@ class Cliente (models.Model):
 class Venta (models.Model):
     estado          =   models.BooleanField(default=True)
     cliente         =   models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    fecha           =   models.DateField()
-    factura         =   models.CharField(max_length=50)
+    fecha           =   models.DateTimeField()
+    factura         =   models.CharField(max_length=50, unique=True)
     total           =   models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
