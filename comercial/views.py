@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse, 
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.db.models import Q
+from django.db.models import Q, Sum
 # from django_ajax.decorators import ajax
 
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cliente, Venta, Item_Venta
@@ -149,16 +149,57 @@ def gestion_productos (request):
             }
             return JsonResponse(response_data, status=201)
         elif request.POST['accion'] == 'info_producto':
-            producto = Producto.objects.get(id=request.POST['id'])
-            producto_serializer = ProductoSerializer(producto)
-            marcas = Marca.objects.all()
-            marcas_serializer = MarcaSerializer(marcas, many=True)
-            contenido = {
-                'producto': producto_serializer.data,
-                'marcas': marcas_serializer.data,
-                'success': True,
-            }
-            return JsonResponse(contenido, status=201)
+            try:
+                producto =  Producto.objects.get(id=request.POST['id'])
+                producto_serializer = ProductoSerializer(producto)
+                try:
+                    kardex  = producto.kardex.latest('fecha')
+                except Kardex.DoesNotExist:
+                    kardex = None
+                marcas      = Marca.objects.all()
+                marcas_serializer = MarcaSerializer(marcas, many=True)
+                if kardex:
+                    compras = producto.kardex.filter(transaccion='compra').aggregate(cantidad_compras=Sum('cantidad'))
+                    ventas  = producto.kardex.filter(transaccion='venta').aggregate(cantidad_ventas=Sum('cantidad'))
+                    stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
+                    contenido = {
+                        'producto': {
+                            'id':       producto_serializer.data['id'],
+                            'marca':    producto_serializer.data['marca'],
+                            'codigo':   producto_serializer.data['codigo'],
+                            'nombre':   producto_serializer.data['nombre'],
+                            'presentacion': producto_serializer.data['presentacion'],
+                            'descripcion': producto_serializer.data['descripcion'],
+                            'precio':   kardex.precio if kardex else 0,
+                            'costo':    kardex.costo if kardex else 0,
+                            'stock':    stock,
+                        },
+                        'marcas': marcas_serializer.data,
+                        'success': True,
+                    }
+                else:
+                    contenido = {
+                        'producto': {
+                            'id':       producto_serializer.data['id'],
+                            'marca':    producto_serializer.data['marca'],
+                            'codigo':   producto_serializer.data['codigo'],
+                            'nombre':   producto_serializer.data['nombre'],
+                            'presentacion': producto_serializer.data['presentacion'],
+                            'descripcion': producto_serializer.data['descripcion'],
+                            'precio':   0,
+                            'costo':    0,
+                            'stock':    0,
+                        },
+                        'marcas': marcas_serializer.data,
+                        'success': True,
+                    }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al obtener la información del producto: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'buscar':
             if request.POST['estado'].lower() == 'true':
                 estado = True

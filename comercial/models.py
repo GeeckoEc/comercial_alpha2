@@ -47,7 +47,7 @@ class Producto (models.Model):
     precio          =   models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.nombre} - {self.marca.nombre} - {self.presentacion} - ${self.precio} - {self.stock} unidades."
+        return f"{self.nombre} - {self.marca.nombre} - {self.presentacion} - ${self.precio}."
 
     def deshabilitar (self):
         self.estado = False
