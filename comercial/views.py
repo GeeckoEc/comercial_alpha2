@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse, 
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Subquery, OuterRef
 # from django_ajax.decorators import ajax
 
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cliente, Venta, Item_Venta
@@ -75,6 +75,11 @@ def gestion_productos (request):
                 estado = False
             productos = Producto.objects.filter(estado=estado).defer('descripcion')
             lista_productos = ProductoSerializer(productos, many=True)
+            try:
+                kardex =    Producto.kardex.latest('fecha')
+            except Kardex.DoesNotExist:
+                kardex = None
+
             marcas      = Marca.objects.all()
             lista_marcas = MarcaSerializer(marcas, many=True)
             contenido   = {
@@ -105,6 +110,9 @@ def gestion_productos (request):
                 producto.descripcion    =   request.POST['descripcion']
                 producto.precio         =   request.POST['precio']
                 producto.save()
+                kardex                  =   Producto.kardex.latest('fecha')
+                kardex.precio           =   producto.precio
+                kardex.save()
                 response_data = {
                     'success': True,
                     'message': 'El producto fue creado correctamente.',
@@ -164,15 +172,15 @@ def gestion_productos (request):
                     stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
                     contenido = {
                         'producto': {
-                            'id':       producto_serializer.data['id'],
-                            'marca':    producto_serializer.data['marca'],
-                            'codigo':   producto_serializer.data['codigo'],
-                            'nombre':   producto_serializer.data['nombre'],
+                            'id':           producto_serializer.data['id'],
+                            'marca':        producto_serializer.data['marca'],
+                            'codigo':       producto_serializer.data['codigo'],
+                            'nombre':       producto_serializer.data['nombre'],
                             'presentacion': producto_serializer.data['presentacion'],
-                            'descripcion': producto_serializer.data['descripcion'],
-                            'precio':   kardex.precio if kardex else 0,
-                            'costo':    kardex.costo if kardex else 0,
-                            'stock':    stock,
+                            'descripcion':  producto_serializer.data['descripcion'],
+                            'precio':       kardex.precio if kardex else 0,
+                            'costo':        kardex.costo if kardex else 0,
+                            'stock':        stock,
                         },
                         'marcas': marcas_serializer.data,
                         'success': True,
@@ -180,15 +188,15 @@ def gestion_productos (request):
                 else:
                     contenido = {
                         'producto': {
-                            'id':       producto_serializer.data['id'],
-                            'marca':    producto_serializer.data['marca'],
-                            'codigo':   producto_serializer.data['codigo'],
-                            'nombre':   producto_serializer.data['nombre'],
+                            'id':           producto_serializer.data['id'],
+                            'marca':        producto_serializer.data['marca'],
+                            'codigo':       producto_serializer.data['codigo'],
+                            'nombre':       producto_serializer.data['nombre'],
                             'presentacion': producto_serializer.data['presentacion'],
-                            'descripcion': producto_serializer.data['descripcion'],
-                            'precio':   0,
-                            'costo':    0,
-                            'stock':    0,
+                            'descripcion':  producto_serializer.data['descripcion'],
+                            'precio':       producto_serializer.data['precio'],
+                            'costo':        0,
+                            'stock':        0,
                         },
                         'marcas': marcas_serializer.data,
                         'success': True,
