@@ -20,6 +20,10 @@
         }).done(function (data) {
             $('#lista-productos').html('')
             $.each(data.productos, function(index, producto) {
+                let stock = 0
+                if (producto.kardex_stock !== null) {
+                    stock = producto.kardex_stock
+                }
                 let boton = `
                     <button class="btn btn-danger" onclick="deshabilitar(${producto.id})">
                         <i class="bi bi-x-circle"></i>
@@ -34,7 +38,7 @@
                 }
                 $('#lista-productos').append(`
                     <tr>
-                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
+                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${stock} unidades.</td>
                     <td>
                         <button class="btn btn-primary" onclick="ver(${producto.id})">
                             <i class="bi bi-info-circle"></i>

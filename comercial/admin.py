@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-                                                                        
 from django.contrib import admin
 
-from .models import Proveedor, Compra, Marca, Producto, Item_Compra, Kardex, Cliente, Venta, Item_Venta  
+from .models import Proveedor, Compra, Marca, Producto, Item_Compra, Kardex, Cliente, Venta, Item_Venta
 
 
 @admin.register(Proveedor)
@@ -71,6 +71,7 @@ class KardexAdmin(admin.ModelAdmin):
         'cantidad',
         'costo',
         'precio',
+        'stock',
     )
     list_filter = ('producto', 'fecha')
 

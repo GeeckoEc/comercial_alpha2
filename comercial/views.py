@@ -1,13 +1,15 @@
 import time
 import json
 from datetime import datetime, date
-from django.core import serializers
+from django.core import serializers as  dj_serializers
+
 from rest_framework import serializers
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.db.models import Q, Sum, Subquery, OuterRef
+from django.db.models import Q, Sum, Subquery, OuterRef, Case, When, Exists
+from django.db.models.functions import Coalesce
 # from django_ajax.decorators import ajax
 
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cliente, Venta, Item_Venta
@@ -16,9 +18,15 @@ from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cli
 
 
 class ProductoSerializer(serializers.ModelSerializer):
+    kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
+    kardex_precio = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True,  default=0)
+
+    kardex_stock = serializers.IntegerField(allow_null=True, default=0)
     class Meta:
         model = Producto
         fields = '__all__'
+        """ exclude = ['descripcion'] """
+        extra_fields = ['kardex_costo', 'kardex_precio', 'kardex_stock']
 
 class MarcaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -69,21 +77,22 @@ def lista_productos (request):
 def gestion_productos (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista':
-            if request.POST['estado'].lower() == 'true':
-                estado = True
-            else:
-                estado = False
-            productos = Producto.objects.filter(estado=estado).defer('descripcion')
-            lista_productos = ProductoSerializer(productos, many=True)
-            try:
-                kardex =    Producto.kardex.latest('fecha')
-            except Kardex.DoesNotExist:
-                kardex = None
+            estado = bool(request.POST.get('estado', False))
+            kardex_subquery = Kardex.objects.filter(producto=OuterRef('pk')).order_by('-fecha')
+            kardex = Exists(kardex_subquery)
+            kardex_costo = kardex_subquery.values('costo')[:1]
+            kardex_precio = kardex_subquery.values('precio')[:1]
+            kardex_stock = kardex_subquery.values('stock')[:1]
+            productos = Producto.objects.filter(estado=estado).annotate(
+                kardex_costo=Subquery(kardex_costo) if kardex else Coalesce(0),
+                kardex_precio=Subquery(kardex_precio) if  kardex else Coalesce(0),
+                kardex_stock=Subquery(kardex_stock)  if kardex else Coalesce(0),
 
+            ).defer('descripcion')
             marcas      = Marca.objects.all()
             lista_marcas = MarcaSerializer(marcas, many=True)
             contenido   = {
-                'productos': lista_productos.data,
+                'productos': ProductoSerializer(productos,  many=True).data,
                 'marcas': lista_marcas.data,
                 'success': True,
             }
@@ -275,29 +284,29 @@ def gestion_compras (request):
                 }
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'crear_compra':
-            """ try: """
-            compra = Compra()
-            compra.factura      =   request.POST['factura']
-            compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
-            compra.fecha        =   datetime.now()
-            compra.total        =   request.POST['total']
-            compra.save()
-            items = json.loads(request.POST['items'])
-            for item in items:
-                item_compra             =   Item_Compra()
-                item_compra.compra      =   compra
-                item_compra.producto    =   Producto.objects.get(id=item['id'])
-                item_compra.cantidad    =   item['cantidad']
-                item_compra.costo      =   item['costo']
-                item_compra.save()
-            
-            return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
-            """ except Exception as e:
+            try:
+                compra = Compra()
+                compra.factura      =   request.POST['factura']
+                compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
+                compra.fecha        =   datetime.now()
+                compra.total        =   request.POST['total']
+                compra.save()
+                items = json.loads(request.POST['items'])
+                for item in items:
+                    item_compra             =   Item_Compra()
+                    item_compra.compra      =   compra
+                    item_compra.producto    =   Producto.objects.get(id=item['id'])
+                    item_compra.cantidad    =   item['cantidad']
+                    item_compra.costo      =   item['costo']
+                    item_compra.save()
+                
+                return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
+            except Exception as e:
                 response_data   =   {
                     'success': False,
                     'message': 'Error al crear la compra: {}'.format(str(e))
                 }
-                return JsonResponse(response_data, status=500) """
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'info_compra':
             compra = Compra.objects.get(id=request.POST['id'])
             compra_serializer = CompraSerializer(compra)

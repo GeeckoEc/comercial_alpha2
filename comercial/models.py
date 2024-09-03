@@ -88,6 +88,7 @@ class Kardex (models.Model):
     cantidad        =   models.IntegerField(default=0)
     costo           =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     precio          =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    stock           =   models.IntegerField(default=0)
 
     def __str__(self):
         ## return f"{self.producto.nombre} - {self.fecha}"
