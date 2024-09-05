@@ -271,6 +271,11 @@
     }
 
     function lista (datos) {
+        if (datos.length  == 0) {
+            $('#lista-clientes').html('<tr><td colspan="4" style="text-align: center; color: gray;">No hay clientes para mostrar.</td></tr>')
+            return false;
+        }
+
         $('#lista-clientes').html('')
         $.each(datos, (index, cliente)=> {
             let boton   =   `<button class="btn btn-success" onclick="habilitar(${cliente.id})"><i class="bi bi-check-circle"></i></button>`

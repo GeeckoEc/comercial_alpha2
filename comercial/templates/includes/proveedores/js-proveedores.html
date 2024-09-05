@@ -1,16 +1,16 @@
 <script>
     $(document).ready(function () {
-        lista(true)
-    })
-
-
-    function lista (estado) {
-        estado = JSON.parse(estado)
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
             }
         });
+        cargar(true)
+    })
+
+
+    function cargar (estado) {
+        estado = JSON.parse(estado)
         $.ajax({
             url:        '{% url "gestion_proveedores" %}',
             type:       'POST',
@@ -20,27 +20,7 @@
                 estado: Boolean(estado)
             },
         }).then(function (respuesta) {
-            if (respuesta.success) {
-                $('#lista-proveedores').html('')
-                $.each(respuesta.proveedores, function (index, proveedor) {
-                    let boton = ``
-                    if ($('#estado').val()  == true || $('#estado').val()  == 'true') {
-                        boton = `<button class="btn btn-danger" onclick="deshabilitar(${proveedor.id})"><i class="bi bi-x"></i></button>`
-                    } else {
-                        boton   =   `<button class="btn btn-success" onclick="habilitar(${proveedor.id})"><i class="bi bi-check"></i></button>`
-                    }
-                    $('#lista-proveedores').append(`
-                        <tr>
-                            <td style="vertical-align: middle;">${proveedor.nombre} - ${proveedor.ciudad}</td>
-                            <td>
-                                <button class="btn btn-primary" onclick="ver(${proveedor.id})"><i class="bi bi-info-circle"></i></button>
-                                <button class="btn btn-primary" onclick="editar(${proveedor.id})"><i class="bi bi-pencil-square"></i></button>
-                                ${boton}
-                            </td>
-                        </tr>
-                    `)
-                })
-            }
+            lista(respuesta.proveedores)
         }).catch(function (error) {
             respuesta = JSON.parse(error.responseText)
             mensaje('red', 'fa fa-circle-xmark', 'Error al cargar lista', respuesta.message)
@@ -54,11 +34,6 @@
     }
 
     function guardar () {
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         let accion = 'crear_proveedor'
         if ($('#id').val() !== '') {
             accion = 'editar_proveedor'
@@ -329,4 +304,29 @@
         `)
     }
 
+    function lista (datos) {
+        if (datos.length == 0) {
+            $('#lista-proveedores').html('<tr><td colspan="2" style="text-align: center; color: gray;">No hay proveedores para  mostrar.</td></tr>');
+            return false;
+        }
+        $('#lista-proveedores').html('')
+                $.each(respuesta.proveedores, function (index, proveedor) {
+                    let boton = ``
+                    if ($('#estado').val()  == true || $('#estado').val()  == 'true') {
+                        boton = `<button class="btn btn-danger" onclick="deshabilitar(${proveedor.id})"><i class="bi bi-x"></i></button>`
+                    } else {
+                        boton   =   `<button class="btn btn-success" onclick="habilitar(${proveedor.id})"><i class="bi bi-check"></i></button>`
+                    }
+                    $('#lista-proveedores').append(`
+                        <tr>
+                            <td style="vertical-align: middle;">${proveedor.nombre} - ${proveedor.ciudad}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="ver(${proveedor.id})"><i class="bi bi-info-circle"></i></button>
+                                <button class="btn btn-primary" onclick="editar(${proveedor.id})"><i class="bi bi-pencil-square"></i></button>
+                                ${boton}
+                            </td>
+                        </tr>
+                    `)
+                })
+    }
 </script>

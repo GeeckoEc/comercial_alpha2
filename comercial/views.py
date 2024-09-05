@@ -119,7 +119,9 @@ def gestion_productos (request):
                 producto.descripcion    =   request.POST['descripcion']
                 producto.precio         =   request.POST['precio']
                 producto.save()
-                kardex                  =   Producto.kardex.latest('fecha')
+                kardex                  =   Kardex()
+                kardex.producto         =   Producto.objects.get(id=producto.id)
+                kardex.transaccion      =   'Creación de Producto'
                 kardex.precio           =   producto.precio
                 kardex.save()
                 response_data = {
@@ -285,6 +287,15 @@ def gestion_compras (request):
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'crear_compra':
             try:
+                producto =  Producto.objects.get(id=request.POST['id'])
+                producto_serializer = ProductoSerializer(producto)
+                try:
+                    kardex  = producto.kardex.latest('fecha')
+                except Kardex.DoesNotExist:
+                    kardex = None
+                compras = producto.kardex.filter(transaccion='compra').aggregate(cantidad_compras=Sum('cantidad'))
+                ventas  = producto.kardex.filter(transaccion='venta').aggregate(cantidad_ventas=Sum('cantidad'))
+                stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
                 compra = Compra()
                 compra.factura      =   request.POST['factura']
                 compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
@@ -294,10 +305,14 @@ def gestion_compras (request):
                 items = json.loads(request.POST['items'])
                 for item in items:
                     item_compra             =   Item_Compra()
+                    kardex                  =   Kardex()
                     item_compra.compra      =   compra
                     item_compra.producto    =   Producto.objects.get(id=item['id'])
+                    kardex.producto         =   Producto.objects.get(id=item['id'])
                     item_compra.cantidad    =   item['cantidad']
-                    item_compra.costo      =   item['costo']
+                    kardex.cantidad         =   item['cantidad']
+                    item_compra.costo       =   item['costo']
+                    kardex.costo            =   item['costo']
                     item_compra.save()
                 
                 return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)

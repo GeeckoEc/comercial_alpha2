@@ -208,6 +208,10 @@
     }
 
     function lista (datos) {
+        if (datos.length == 0) {
+            $('#lista-marcas').html('<tr><td  colspan="3" style="text-align: center; color: gray;">No hay marcas para mostrar.</td></tr>');
+            return false;
+        }
         let ancho_descripcion = $('#ancho-descripcion').width()
         let ancho_texto = Math.floor(ancho_descripcion/8.3)
         $('#lista-marcas').html('')

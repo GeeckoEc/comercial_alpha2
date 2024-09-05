@@ -84,7 +84,7 @@ class Kardex (models.Model):
 
     producto        =   models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='kardex')
     transaccion     =   models.CharField(max_length=20, choices=detalles, default='Compra')
-    fecha           =   models.DateTimeField()
+    fecha           =   models.DateTimeField(auto_now_add=True)
     cantidad        =   models.IntegerField(default=0)
     costo           =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     precio          =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)

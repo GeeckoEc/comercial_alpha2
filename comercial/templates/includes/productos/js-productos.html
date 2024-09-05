@@ -1,14 +1,16 @@
 <script>
     $(document).ready(function () {
-        lista(true)
-    })
-
-    function lista (estado) {
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
             }
         });
+
+        cargar(true)
+        
+    })
+
+    function cargar (estado) {
         $.ajax({
             url:        '{% url "gestion_productos" %}',
             dataType:   'JSON',
@@ -18,48 +20,11 @@
                 estado: JSON.parse(estado)
             }
         }).done(function (data) {
-            $('#lista-productos').html('')
-            $.each(data.productos, function(index, producto) {
-                let stock = 0
-                if (producto.kardex_stock !== null) {
-                    stock = producto.kardex_stock
-                }
-                let boton = `
-                    <button class="btn btn-danger" onclick="deshabilitar(${producto.id})">
-                        <i class="bi bi-x-circle"></i>
-                    </button>
-                `
-                if (!JSON.parse($('#estado').val())) {
-                    boton = `
-                        <button class="btn btn-success" onclick="habilitar(${producto.id})">
-                            <i class="bi bi-check-circle"></i>
-                        </button>
-                    `
-                }
-                $('#lista-productos').append(`
-                    <tr>
-                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${stock} unidades.</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="ver(${producto.id})">
-                            <i class="bi bi-info-circle"></i>
-                        </button>
-                        <button class="btn btn-primary" onclick="editar(${producto.id})">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        ${boton}
-                    </td>
-                    </tr>
-                `)
-            })
+            lista(data)
         })
     }
 
     function buscar(buscar) {
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         $.ajax({
             url:        '{% url "gestion_productos" %}',
             dataType:   'JSON',
@@ -70,35 +35,7 @@
                 buscar: buscar
             }
         }).then((data) => {
-            $('#lista-productos').html('')
-            $.each(data.productos, (index, producto) => {
-                let boton = `
-                    <a class="btn btn-danger" href="../info/${producto.id}">
-                        <i class="bi bi-x-circle"></i>
-                    </a>
-                `
-                if (!JSON.parse($('#estado').val())) {
-                    boton = `
-                        <a class="btn btn-success" href="../info/${producto.id}">
-                            <i class="bi bi-check-circle"></i>
-                        </a>
-                    `
-                }
-                $('#lista-productos').append(`
-                    <tr>
-                        <td style="vertical-align: middle;">${producto.nombre} - ${data.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${producto.stock} unidades.</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="ver(${producto.id})">
-                            <i class="bi bi-info-circle"></i>
-                        </button>
-                        <button class="btn btn-primary" onclick="editar(${producto.id})">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        ${boton}
-                    </td>
-                    </tr>
-                `)
-            })
+            lista(data)
         })
     }
 
@@ -112,11 +49,6 @@
         if ($('#id').val() !== '') {
             accion = 'editar_producto'
         }
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         $.ajax({
             url:        '{% url "gestion_productos" %}',
             dataType:   'JSON',
@@ -134,7 +66,7 @@
         }).then((respuesta) => {
             mensaje('fa fa-circle-check', 'Guardar Producto', 'green', respuesta.message)
             $('#producto-modal').modal('toggle')
-            lista(JSON.parse($('#estado').val()))
+            cargar(JSON.parse($('#estado').val()))
         }).catch((error) => {
             let respuesta = JSON.parse(error.responseText)
             mensaje('fa fa-circle-check', 'Error al Guardar Producto', 'red', respuesta.message)
@@ -312,6 +244,47 @@
             let respuesta = JSON.parse(error.responseText)
             mensaje('fa fa-circle-xmark', 'Error', 'red', respuesta.message)
         })
+    }
+
+    function lista (datos) {
+        if (datos.productos.length ==  0) {
+            $('#lista-productos').html('<tr><td colspan="2" style="text-align: center; color: gray;">No hay productos para mostrar.</td></tr>')
+            return false;
+        }
+
+        $('#lista-productos').html('')
+            $.each(datos.productos, function(index, producto) {
+                let stock = 0
+                if (producto.kardex_stock !== null) {
+                    stock = producto.kardex_stock
+                }
+                let boton = `
+                    <button class="btn btn-danger" onclick="deshabilitar(${producto.id})">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                `
+                if (!JSON.parse($('#estado').val())) {
+                    boton = `
+                        <button class="btn btn-success" onclick="habilitar(${producto.id})">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                    `
+                }
+                $('#lista-productos').append(`
+                    <tr>
+                        <td style="vertical-align: middle;">${producto.nombre} - ${datos.marcas[producto.marca - 1].nombre} - ${producto.presentacion} - $${producto.precio} - ${stock} unidades.</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="ver(${producto.id})">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="editar(${producto.id})">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        ${boton}
+                    </td>
+                    </tr>
+                `)
+            })
     }
 
     function informacion (datos) {
