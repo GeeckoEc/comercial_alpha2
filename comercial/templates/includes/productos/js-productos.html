@@ -292,7 +292,6 @@
         if (datos.producto.estado) {
             estado = 'Habilitado'
         }
-        let marca = datos.marcas.find(item => item.id == datos.producto.marca)
         $('.modal-body').html(`
             <h4>Estado</h4>
             <h5  class="text-black-50">${estado}</h5>
@@ -301,13 +300,13 @@
             <h4>Nombre</h4>
             <h5  class="text-black-50">${datos.producto.nombre}</h5>
             <h4>Marca</h4>
-            <h5  class="text-black-50">${marca.nombre}</h5>
+            <h5  class="text-black-50">${datos.marca.nombre}</h5>
             <h4>Descripción</h4>
             <h5  class="text-black-50">${datos.producto.descripcion}</h5>
             <h4>Precio</h4>
             <h5  class="text-black-50">${datos.producto.precio}</h5>
             <h4>Stock</h4>
-            <h5  class="text-black-50">${datos.producto.stock}</h5>            
+            <h5  class="text-black-50">${datos.kardex.stock}</h5>            
         `)
         $('#producto-modal').modal('toggle')
     }

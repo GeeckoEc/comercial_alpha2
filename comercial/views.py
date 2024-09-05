@@ -20,8 +20,8 @@ from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cli
 class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
     kardex_precio = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True,  default=0)
-
     kardex_stock = serializers.IntegerField(allow_null=True, default=0)
+
     class Meta:
         model = Producto
         fields = '__all__'
@@ -51,6 +51,11 @@ class  CompraSerializer(serializers.ModelSerializer):
 class Item_CompraSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item_Compra
+        fields = '__all__'
+
+class KardexSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Kardex
         fields = '__all__'
 
 def index (request):
@@ -169,49 +174,15 @@ def gestion_productos (request):
             return JsonResponse(response_data, status=201)
         elif request.POST['accion'] == 'info_producto':
             try:
-                producto =  Producto.objects.get(id=request.POST['id'])
-                producto_serializer = ProductoSerializer(producto)
-                try:
-                    kardex  = producto.kardex.latest('fecha')
-                except Kardex.DoesNotExist:
-                    kardex = None
-                marcas      = Marca.objects.all()
-                marcas_serializer = MarcaSerializer(marcas, many=True)
-                if kardex:
-                    compras = producto.kardex.filter(transaccion='compra').aggregate(cantidad_compras=Sum('cantidad'))
-                    ventas  = producto.kardex.filter(transaccion='venta').aggregate(cantidad_ventas=Sum('cantidad'))
-                    stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
-                    contenido = {
-                        'producto': {
-                            'id':           producto_serializer.data['id'],
-                            'marca':        producto_serializer.data['marca'],
-                            'codigo':       producto_serializer.data['codigo'],
-                            'nombre':       producto_serializer.data['nombre'],
-                            'presentacion': producto_serializer.data['presentacion'],
-                            'descripcion':  producto_serializer.data['descripcion'],
-                            'precio':       kardex.precio if kardex else 0,
-                            'costo':        kardex.costo if kardex else 0,
-                            'stock':        stock,
-                        },
-                        'marcas': marcas_serializer.data,
-                        'success': True,
-                    }
-                else:
-                    contenido = {
-                        'producto': {
-                            'id':           producto_serializer.data['id'],
-                            'marca':        producto_serializer.data['marca'],
-                            'codigo':       producto_serializer.data['codigo'],
-                            'nombre':       producto_serializer.data['nombre'],
-                            'presentacion': producto_serializer.data['presentacion'],
-                            'descripcion':  producto_serializer.data['descripcion'],
-                            'precio':       producto_serializer.data['precio'],
-                            'costo':        0,
-                            'stock':        0,
-                        },
-                        'marcas': marcas_serializer.data,
-                        'success': True,
-                    }
+                producto            =   Producto.objects.get(id=request.POST['id'])
+                kardex              =   producto.kardex.latest('fecha')
+                marca               =   producto.marca
+                contenido           =   {
+                    'producto': ProductoSerializer(producto).data,
+                    'marca':   MarcaSerializer(marca).data,
+                    'kardex':   KardexSerializer(kardex).data,
+                    'success':  True
+                }
                 return JsonResponse(contenido, status=201)
             except Exception as e:
                 response_data = {
@@ -227,8 +198,9 @@ def gestion_productos (request):
             productos = Producto.objects.filter(estado=estado).filter(
                 Q(codigo__icontains=request.POST['buscar']) |
                 Q(nombre__icontains=request.POST['buscar']) |
-                Q(presentacion__icontains=request.POST['buscar'])
-            )
+                Q(presentacion__icontains=request.POST['buscar']) |
+                Q(marca__nombre__icontains=request.POST['buscar'])
+            ).prefetch_related('marca')
             lista_productos = ProductoSerializer(productos, many=True)
             marcas      = Marca.objects.all()
             lista_marcas = MarcaSerializer(marcas, many=True)
@@ -287,6 +259,12 @@ def gestion_compras (request):
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'crear_compra':
             try:
+                compra = Compra()
+                compra.factura      =   request.POST['factura']
+                compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
+                compra.fecha        =   datetime.now()
+                compra.total        =   request.POST['total']
+                compra.save()
                 producto =  Producto.objects.get(id=request.POST['id'])
                 producto_serializer = ProductoSerializer(producto)
                 try:
@@ -296,12 +274,6 @@ def gestion_compras (request):
                 compras = producto.kardex.filter(transaccion='compra').aggregate(cantidad_compras=Sum('cantidad'))
                 ventas  = producto.kardex.filter(transaccion='venta').aggregate(cantidad_ventas=Sum('cantidad'))
                 stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
-                compra = Compra()
-                compra.factura      =   request.POST['factura']
-                compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
-                compra.fecha        =   datetime.now()
-                compra.total        =   request.POST['total']
-                compra.save()
                 items = json.loads(request.POST['items'])
                 for item in items:
                     item_compra             =   Item_Compra()
