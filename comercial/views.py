@@ -21,6 +21,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
     kardex_precio = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True,  default=0)
     kardex_stock = serializers.IntegerField(allow_null=True, default=0)
+    marca_nombre = serializers.CharField(source='marca.nombre')
 
     class Meta:
         model = Producto
@@ -107,10 +108,9 @@ def gestion_productos (request):
                 productos = Producto.objects.filter(estado=True)
             else:
                 id = request.POST['filtrar']
-                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion')
-            lista_productos = ProductoSerializer(productos, many=True)
+                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion').select_related('marca')
             contenido = {
-                'productos': lista_productos.data,
+                'productos': ProductoSerializer(productos, many=True).data,
                 'success': True,
             }
             return JsonResponse(contenido, status=201)
@@ -141,19 +141,30 @@ def gestion_productos (request):
                 }
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'editar_producto':
-            producto = Producto.objects.get(id=request.POST['id'])
-            producto.codigo = request.POST['codigo']
-            producto.marca = Marca.objects.get(id=request.POST['marca'])
-            producto.nombre = request.POST['nombre']
-            producto.presentacion = request.POST['presentacion']
-            producto.descripcion = request.POST['descripcion']
-            producto.precio = request.POST['precio']
-            producto.save()
-            response_data = {
-                'success': True,
-                'message': 'El producto fue editado correctamente.',
-            }
-            return JsonResponse(response_data, status=201)
+            try:
+                producto                =   Producto.objects.get(id=request.POST['id'])
+                producto.codigo         =   request.POST['codigo']
+                producto.marca          =   Marca.objects.get(id=request.POST['marca'])
+                producto.nombre         =   request.POST['nombre']
+                producto.presentacion   =   request.POST['presentacion']
+                producto.descripcion    =   request.POST['descripcion']
+                producto.precio         =   request.POST['precio']
+                producto.save()
+                kardex                  =   producto.kardex.latest('fecha')
+                kardex.transaccion      =   'Edición de Producto'
+                kardex.precio           =   producto.precio
+                kardex.save()
+                response_data = {
+                    'success': True,
+                    'message': 'El producto fue editado correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception  as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al editar el producto: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'deshabilitar_producto':
             producto = Producto.objects.get(id=request.POST['id'])
             producto.estado = False
@@ -265,28 +276,24 @@ def gestion_compras (request):
                 compra.fecha        =   datetime.now()
                 compra.total        =   request.POST['total']
                 compra.save()
-                producto =  Producto.objects.get(id=request.POST['id'])
-                producto_serializer = ProductoSerializer(producto)
-                try:
-                    kardex  = producto.kardex.latest('fecha')
-                except Kardex.DoesNotExist:
-                    kardex = None
-                compras = producto.kardex.filter(transaccion='compra').aggregate(cantidad_compras=Sum('cantidad'))
-                ventas  = producto.kardex.filter(transaccion='venta').aggregate(cantidad_ventas=Sum('cantidad'))
-                stock   = compras.get('cantidad_compras', 0) -  ventas.get('cantidad_ventas', 0)
                 items = json.loads(request.POST['items'])
                 for item in items:
-                    item_compra             =   Item_Compra()
-                    kardex                  =   Kardex()
-                    item_compra.compra      =   compra
-                    item_compra.producto    =   Producto.objects.get(id=item['id'])
-                    kardex.producto         =   Producto.objects.get(id=item['id'])
-                    item_compra.cantidad    =   item['cantidad']
-                    kardex.cantidad         =   item['cantidad']
-                    item_compra.costo       =   item['costo']
-                    kardex.costo            =   item['costo']
-                    item_compra.save()
-                
+                    producto    =   Producto.objects.get(id=item['id'])
+                    kardex      =   producto.kardex.latest('fecha')
+                    nuevo_kardex    =   Kardex.objects.create(
+                        producto        =   producto,
+                        transaccion     =   'Compra',
+                        costo           =   item['costo'],
+                        precio          =   kardex.precio,
+                        cantidad        =   item['cantidad'],
+                        stock           =   int(kardex.stock) + int(item['cantidad'])
+                    )
+                    nuevo_item      =   Item_Compra.objects.create(
+                        compra          =   compra,
+                        producto        =   producto,
+                        cantidad        =   item['cantidad'],
+                        costo           =   item['costo']
+                    )
                 return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
             except Exception as e:
                 response_data   =   {

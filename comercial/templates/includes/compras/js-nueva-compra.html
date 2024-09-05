@@ -39,7 +39,7 @@
                     $.each(data.productos, function (index, producto) {
                         $('#productos').append(`
                             <tr>
-                                <td>${producto.nombre}</td>
+                                <td>${producto.marca_nombre} - ${producto.nombre}</td>
                                 <td>
                                     <button class="btn btn-primary" onclick="agregar(${producto.id})"><i class="bi bi-check2-circle"></i></button>
                                 </td>
@@ -63,7 +63,7 @@
         let producto = lista_productos.find((item) => item.id === id);
         $('#productos-modal').modal('toggle')
         $.confirm({
-            icon:               'fa-boxes-stacked',
+            icon:               'fa fa-boxes-stacked',
             title:              'Cantidad',
             type:               'blue',
             content:            '' + 
@@ -84,7 +84,7 @@
                         sessionStorage.setItem('seleccionados', JSON.stringify([{id: id, cantidad: $('#cantidad').val(), costo: $('#costo').val()}]))
                     } else {
                         let seleccionados = JSON.parse(sessionStorage.getItem('seleccionados'))
-                        seleccionados.push({id: id, cantidad: $('#cantidad').val()})
+                        seleccionados.push({id: id, cantidad: $('#cantidad').val(), costo: $('#costo').val()})
                         sessionStorage.setItem('seleccionados', JSON.stringify(seleccionados))
                     }
                     lista_seleccionados()

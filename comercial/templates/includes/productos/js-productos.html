@@ -40,7 +40,7 @@
     }
 
     function nuevo_producto () {
-        formulario()
+        formulario('Nuevo Producto')
         marcas()
     }
 
@@ -73,7 +73,7 @@
         })
     }
 
-    function formulario () {
+    function formulario (etiqueta) {
         let formulario = `
             <form>
                 <input id="id" name="id" hidden>
@@ -105,7 +105,8 @@
             </form>
         `
         $('.modal-body').html(formulario)
-        $('#producto-modal').modal('toggle')
+        $('#etiqueta-modal').html(etiqueta)
+        $('#modal').modal('toggle')
     }
 
     function marcas () {
@@ -229,7 +230,7 @@
             }
         }).then((respuesta) => {
             let producto = respuesta.producto
-            formulario()
+            formulario('Editar Producto')
             marcas()
             setTimeout(() => {
                 $('#id').val(producto.id)
@@ -293,22 +294,45 @@
             estado = 'Habilitado'
         }
         $('.modal-body').html(`
-            <h4>Estado</h4>
-            <h5  class="text-black-50">${estado}</h5>
-            <h4>Codigo</h4>
-            <h5  class="text-black-50">${datos.producto.codigo}</h5>
-            <h4>Nombre</h4>
-            <h5  class="text-black-50">${datos.producto.nombre}</h5>
-            <h4>Marca</h4>
-            <h5  class="text-black-50">${datos.marca.nombre}</h5>
-            <h4>Descripción</h4>
-            <h5  class="text-black-50">${datos.producto.descripcion}</h5>
-            <h4>Precio</h4>
-            <h5  class="text-black-50">${datos.producto.precio}</h5>
-            <h4>Stock</h4>
-            <h5  class="text-black-50">${datos.kardex.stock}</h5>            
+            <h6>Estado</h6>
+            <p  class="text-black-50">${estado}</p>
+            <h6>Codigo</h6>
+            <p  class="text-black-50">${datos.producto.codigo}</p>
+            <h6>Nombre</h6>
+            <p  class="text-black-50">${datos.producto.nombre}</p>
+            <h6>Marca</h6>
+            <p  class="text-black-50">${datos.marca.nombre}</p>
+            <h6>Descripción</h6>
+            <p  class="text-black-50">${datos.producto.descripcion}</p>
+            <h6>Precio</h6>
+            <p  class="text-black-50">${datos.producto.precio}</p>
+            <h6>Stock</h6>
+            <p  class="text-black-50">${datos.kardex.stock}</p>   
+            <div class="accordion accordion-flush" id="accordionFlushExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            Movimientos de Stock
+                        </button>
+                    </h2>    
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                        <div class="accordion-body">
+                            <table class="table table-borderless">
+                                <thead>
+                                    <th>Transacción</th>
+                                    <th>Cantidad</th>
+                                    <th>Fecha</th>    
+                                </thead>
+                                <tbody></tbody>    
+                            </table>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         `)
-        $('#producto-modal').modal('toggle')
+        $('#etiqueta-modal').html('Información del Producto')
+        $('#modal').modal('toggle')
     }
 
     function mensaje (icono, titulo, color, mensaje) {
