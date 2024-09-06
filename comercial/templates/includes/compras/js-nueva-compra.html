@@ -1,6 +1,11 @@
 <script>
     let lista_productos = []
     $(document).ready(()=>{
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
         // sessionStorage.clear()
         lista_seleccionados()
     })
@@ -19,11 +24,6 @@
         } else {
             filtrar = null
         }
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         $.ajax({
                 url:        '{% url "gestion_productos" %}',
                 type:       'POST',
@@ -98,11 +98,6 @@
     }
 
     function lista_seleccionados () {
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         $.ajax({
             url:        '{% url "gestion_productos" %}',
             type:       'POST',
@@ -204,11 +199,6 @@
         $.each(seleccionados, (index, item) => {
             filtrar.push(item.id)
         })
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
-            }
-        });
         $.ajax({
             url:        '{% url "gestion_productos" %}',
             type:       'POST',
@@ -224,7 +214,7 @@
             $.each(lista_productos, function (index, producto) {
                 $('#productos').append(`
                     <tr>
-                        <td>${producto.nombre}</td>
+                        <td>${producto.marca_nombre} - ${producto.nombre}</td>
                         <td>
                             <button class="btn btn-primary" onclick="agregar(${producto.id})"><i class="bi bi-check2-circle"></i></button>
                         </td>

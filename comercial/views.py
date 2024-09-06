@@ -201,6 +201,27 @@ def gestion_productos (request):
                     'message': 'Error al obtener la información del producto: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'informacion_producto':
+            try:
+                producto            =   Producto.objects.get(id=request.POST['id'])
+                kardex              =   producto.kardex.latest('fecha')
+                marca               =   producto.marca
+                movimientos         =   Kardex.objects.filter(producto=producto)
+                contenido           =   {
+                    'producto': ProductoSerializer(producto).data,
+                    'marca':   MarcaSerializer(marca).data,
+                    'kardex':   KardexSerializer(kardex).data,
+                    'movimientos': KardexSerializer(movimientos, many=True).data,
+
+                    'success':  True
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al obtener la información del producto: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'buscar':
             if request.POST['estado'].lower() == 'true':
                 estado = True
@@ -553,24 +574,42 @@ def crear_venta (request):
 def gestion_ventas (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'crear_compra': 
-            venta = Venta()
-            venta.factura   =   request.POST['factura']
-            venta.cliente   =   request.POST['cliente']
-            venta.fecha     =   datetime.now()
-            venta.total     =   request.POST['total']
-            venta.save()
-            for item in json.loads(request.POST['productos']):
-                item_venta             =   Item_Venta()
-                item_venta.venta        =   venta
-                item_venta.producto     =   Producto.objects.get(id=item['id'])
-                item_venta.cantidad     =   item['cantidad']
-                item_venta.precio       =   item['precio']
-                item_venta.save()
-            contenido = {
-                'success': True,
-                'message': 'La venta fue creada correctamente.',
-            }
-            return JsonResponse(contenido, status=201)
+            try:
+                venta = Venta()
+                venta.factura   =   request.POST['factura']
+                venta.cliente   =   Cliente.objects.get(id=request.POST['cliente'])
+                venta.fecha     =   datetime.now()
+                venta.total     =   request.POST['total']
+                venta.save()
+                for item in json.loads(request.POST['items']):
+                    producto = Producto.objects.get(id=item['id'])
+                    kardex  =    producto.kardex.latest('fecha')
+                    Kardex.objects.create(
+                        producto    =   producto,
+                        transaccion =   'Venta',
+                        costo       =   kardex.costo,
+                        precio      =   item['precio'],
+                        cantidad    =   item['cantidad'],
+                        stock       =   int(kardex.stock) - int(item['cantidad'])
+
+                    )
+                    Item_Venta.objects.create(
+                        venta       =   venta,
+                        producto    =   producto,
+                        cantidad    =   item['cantidad'],
+                        precio      =   item['precio']
+                    )
+                contenido = {
+                    'success': True,
+                    'message': 'La venta fue creada correctamente.',
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al crear la venta: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 def lista_clientes (request):

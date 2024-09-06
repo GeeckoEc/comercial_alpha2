@@ -9,7 +9,7 @@
 <body>
     {% include 'includes/menu.html' %}
     <div class="container">
-        <div class="row my-5 pt-5">
+        <div class="row mt-5 pt-5">
             <h1>Nueva Venta</h1>
             <div>
                 <div class="row my-3">
@@ -63,6 +63,9 @@
             </div>
         </div>
         <div class="row">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-primary px-5" onclick="productos_sin_seleccionar()"><i class="bi bi-plus-circle"></i> Agregar Producto</button>
+            </div>
             <table class="table table-borderless table-hover border">
                 <thead class="table-dark">
                     <th style="width: 60px;">#</th>
@@ -80,32 +83,17 @@
             <div class="col"></div>
             <div class="col"></div>
             <div class="col">
-                <div class="form-floating">
-                    <input type="text" name="total" id="total" class="form-control" placeholder="total" readonly>
-                    <label for="total">Total $</label>
+                <div class="input-group my-2">
+                    <span class="input-group-text">Total <i class="bi bi-currency-dollar"></i></span>
+                    <input type="text" class="form-control" style="text-align: right;" name="total" id="total" title="total" readonly>
+                    <label for="total"></label>
                 </div>
+                <button class="btn btn-success form-control" onclick="procesar()"><i class="bi bi-check-circle"></i> Procesar Compra</button>
             </div>
         </div>
     </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="modal-ventas" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="etiqueta-modal-ventas" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="etiqueta-modal-ventas">...</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body"></div>
-                <div class="modal-footer">
-                    Comercial Raquelita
-                </div>
-            </div>
-        </div>
-    </div>
-
-    
+    {% include 'includes/modal.html' %}
 </body>
     {% include 'includes/scripts.html' %}
-    {% include 'includes/ventas/js-ventas.html' %}
+    {% include 'includes/ventas/js-nueva-venta.html' %}
 </html>

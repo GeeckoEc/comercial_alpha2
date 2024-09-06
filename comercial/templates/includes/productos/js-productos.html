@@ -138,7 +138,7 @@
             type:       'POST',
             dataType:   'JSON',
             data:       {
-                accion:     'info_producto',
+                accion:     'informacion_producto',
                 id:         id
             }
         }).then((respuesta) => {
@@ -311,19 +311,19 @@
             <div class="accordion accordion-flush" id="accordionFlushExample">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                        <button class="accordion-button collapsed bg-info" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
                             Movimientos de Stock
                         </button>
                     </h2>    
                     <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
-                        <div class="accordion-body">
+                        <div class="accordion-body px-0">
                             <table class="table table-borderless">
                                 <thead>
                                     <th>Transacción</th>
-                                    <th>Cantidad</th>
-                                    <th>Fecha</th>    
+                                    <th style="width: 60px;">Cant.</th>
+                                    <th style="width: 110px;">Fecha</th>    
                                 </thead>
-                                <tbody></tbody>    
+                                <tbody id="lista-movimientos"></tbody>    
                             </table>    
                         </div>
                     </div>
@@ -331,6 +331,16 @@
             </div>
             
         `)
+        $.each(datos.movimientos, function(index, movimiento) {
+            let fecha = new Date(movimiento.fecha)
+            $('#lista-movimientos').append(`
+                <tr>
+                    <td>${movimiento.transaccion}</td>
+                    <td>${movimiento.cantidad}</td>
+                    <td>${(`0${fecha.getDate()}`).slice(-2)}-${(`0${fecha.getMonth() + 1}`).slice(-2)}-${fecha.getFullYear()}</td>
+                </tr>
+            `)
+        })
         $('#etiqueta-modal').html('Información del Producto')
         $('#modal').modal('toggle')
     }
