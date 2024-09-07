@@ -199,7 +199,7 @@
             title:              'Cantidad',
             type:               'blue',
             content:            '' + 
-                                '<p>Ingresa la cantidad y costo para <strong>' + producto.nombre + ' ' + producto.presentacion + '</strong>.</p>' +     
+                                '<p>Ingresa la cantidad para <strong>' + producto.nombre + ' ' + producto.presentacion + '</strong>.</p>' +     
                                 '<div class="form-floating">' +
                                 '<input type="number" id="cantidad" name="cantidad" class="form-control" placeholder="cantidad">' + 
                                 '<label for="cantidad">Cantidad</label>' +
@@ -213,13 +213,14 @@
             buttons:            {
                 Aceptar:    function () {
                     if (sessionStorage.getItem('seleccionados') == null) {
-                        sessionStorage.setItem('seleccionados', JSON.stringify([{id: id, cantidad: $('#cantidad').val(), costo: $('#costo').val()}]))
+                        sessionStorage.setItem('seleccionados', JSON.stringify([{id: id, cantidad: $('#cantidad').val(), precio: $('#precio').val()}]))
                     } else {
                         let seleccionados = JSON.parse(sessionStorage.getItem('seleccionados'))
-                        seleccionados.push({id: id, cantidad: $('#cantidad').val(), costo: $('#costo').val()})
+                        seleccionados.push({id: id, cantidad: $('#cantidad').val(), precio: $('#precio').val()})
                         sessionStorage.setItem('seleccionados', JSON.stringify(seleccionados))
                     }
                     lista_seleccionados()
+                    $('#modal').modal('toggle')
                 }, 
                 Cancelar:   function () {}
             }
@@ -284,39 +285,44 @@
     }
 
     function lista_seleccionados () {
-        $.ajax({
-            url:        '{% url "gestion_productos" %}',
-            type:       'POST',
-            dataType:   'JSON',
-            data:       {
-                accion: 'lista', 
-                estado: true
-            }
-        }).done(function (data){
-            $('#productos-seleccionados').html('')
-            if (data.success) {
-                let ids = JSON.parse(sessionStorage.getItem('seleccionados'))
+        let seleccionados = []
+        if (sessionStorage.getItem('seleccionados') !==  null && JSON.parse(sessionStorage.getItem('seleccionados')).length  > 0) {
+
+            $.ajax({
+                url:        '{% url "gestion_productos" %}',
+                type:       'POST',
+                dataType:   'JSON',
+                data:       {
+                    accion: 'productos_seleccionados',
+                    seleccionados: sessionStorage.getItem('seleccionados')
+                }
+            }).done(function (respuesta){
+                $('#productos-seleccionados').html('')
+                let seleccionados = JSON.parse(sessionStorage.getItem('seleccionados'))
                 let total = 0.00
-                $.each(ids, function(index, id){
-                    let info = data.productos.find((producto) => producto.id == id.id)
-                    let marca = data.marcas.find((item) => item.id === info.marca)
-                    total = parseFloat(total) + (parseFloat(info.precio) * parseInt(id.cantidad))
-                    $('#productos-seleccionados').append(`
+                $('#lista-productos').html('')
+                $.each(respuesta.productos, function(index, producto){
+                    let precio  = seleccionados.find(item => item.id == producto.id).precio
+                    let cantidad = seleccionados.find(item => item.id == producto.id).cantidad
+                    total = parseFloat(total) + (parseFloat(precio) * parseInt(cantidad))
+                    $('#lista-productos').append(`
                         <tr>
                             <td style="vertical-align: middle;">${index + 1}</td>
-                            <td style="vertical-align: middle;">${info.nombre} ${marca.nombre} ${info.presentacion}</td>
-                            <td style="vertical-align: middle; text-align: right;">${id.cantidad}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat(info.precio).toFixed(2)}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat((info.precio) * parseInt(id.cantidad)).toFixed(2)}</td>
+                            <td style="vertical-align: middle;">${producto.nombre} ${producto.marca_nombre} ${producto.presentacion}</td>
+                            <td style="vertical-align: middle; text-align: right;">${cantidad}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat(precio).toFixed(2)}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat((precio) * parseInt(cantidad)).toFixed(2)}</td>
                             <td style="vertical-align: middle;">
-                                <button class="btn btn-danger" onclick="quitar_producto(${id.id})"><i class="bi bi-x"></i></button>
+                                <button class="btn btn-danger" onclick="quitar_producto(${producto.id})"><i class="bi bi-x"></i></button>
                             </td>
                         </tr>
                     `)
                 })
-                $('#total').val(total.toFixed(2))
-            }
-        })
+                $('#total').val(total.toFixed(2))       
+            })
+        } else {
+            $('#lista-productos').html('<tr><td colspan="6" style="text-align: center; color: gray;">No hay productos seleccionados.</td></tr>')
+        }
     }
 
     function mensaje (icono, titulo, color, mensaje) {

@@ -114,6 +114,22 @@ def gestion_productos (request):
                 'success': True,
             }
             return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'productos_seleccionados':
+            try:
+                lista = json.loads(request.POST['seleccionados'])
+                ids = [item['id'] for item in lista]
+                productos = Producto.objects.filter(id__in=ids).prefetch_related('marca')
+                contenido = {
+                    'productos': ProductoSerializer(productos, many=True).data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al encontrar los productos: {}'.format(str(e))
+                }
+                return  JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'crear_producto':
             try:
                 producto                =   Producto()
