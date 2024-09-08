@@ -859,9 +859,80 @@ def registrar_usuario(request):
                     "campos": campos
                 })
 
-            return redirect('login')
+            return redirect('lista_usuarios')
 
 @login_required
 def lista_usuarios(request):
     usuarios = User.objects.all()
     return render(request, 'usuarios/lista.html', {'usuarios': usuarios})
+
+def editar_usuario(request, id):
+    if request.method == 'GET':
+        usuario = get_object_or_404(User, id=id)
+        campos ={
+            "usuario" : usuario.username,
+            "nombre" : usuario.first_name,
+            "apellido" : usuario.last_name,
+            "email" : usuario.email,
+            "rol" : 'Administrador' if usuario.is_superuser else usuario.groups.first().name,
+            'password': '',
+            'password2': ''
+        }
+        return render(request, 'usuarios/editar.html', {
+            "campos": campos,
+            "roles": Group.objects.all()
+        })
+    elif request.method == 'POST':
+        usuario = get_object_or_404(User, id=id)
+        campos ={
+            "usuario" : request.POST['usuario'],
+            "nombre" : request.POST['nombre'],
+            "apellido" : request.POST['apellido'],
+            "email" : request.POST['email'],
+            "rol" : request.POST['rol'],
+            'password': request.POST['password'],
+            'password2': request.POST['password2']
+        }
+
+        if  campos['usuario'] == '' or campos['email'] == '' or campos['nombre'] == '' or campos['apellido'] == '':
+            return render(request, 'usuarios/editar.html', {
+                "roles": Group.objects.all(),
+                "error": "Los campos usuario, email, nombre y apellido son requeridos.",
+                "campos": campos
+            })
+
+        if campos['password'] != '' and campos['password2'] != '' and campos['password'] != campos['password2']:
+            return render(request, 'usuarios/editar.html', {
+                "roles": Group.objects.all(),
+                "error": "Las contraseñas no coinciden.",
+                "campos": usuario
+            })
+
+        try:
+            usuario.first_name = campos['nombre']
+            usuario.last_name = campos['apellido']
+            usuario.email = campos['email']
+            usuario.username = campos['usuario']
+
+            if campos['password'] != '':
+                usuario.set_password(campos['password'])
+
+            usuario.groups.clear()
+
+
+            if request.POST['rol'] == 'Administrador':
+                usuario.is_superuser = True
+            else:
+                grupo = Group.objects.get(name=campos['rol'])
+                grupo.user_set.add(usuario)
+
+            # actualizar el usuario
+            usuario.save()
+        except IntegrityError:
+            return render(request, 'usuarios/editar.html', {
+                "roles": Group.objects.all(),
+                "error": "Error al editar el usuario.",
+                "campos": usuario
+            })
+
+        return redirect('lista_usuarios')
