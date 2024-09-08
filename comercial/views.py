@@ -866,6 +866,7 @@ def lista_usuarios(request):
     usuarios = User.objects.all()
     return render(request, 'usuarios/lista.html', {'usuarios': usuarios})
 
+@login_required
 def editar_usuario(request, id):
     if request.method == 'GET':
         usuario = get_object_or_404(User, id=id)
@@ -920,9 +921,10 @@ def editar_usuario(request, id):
             usuario.groups.clear()
 
 
-            if request.POST['rol'] == 'Administrador':
+            if campos['rol'] == 'Administrador':
                 usuario.is_superuser = True
             else:
+                usuario.is_superuser = False
                 grupo = Group.objects.get(name=campos['rol'])
                 grupo.user_set.add(usuario)
 
@@ -936,3 +938,27 @@ def editar_usuario(request, id):
             })
 
         return redirect('lista_usuarios')
+
+@login_required
+def deshabilitar_usuario(request, id):
+    usuario = get_object_or_404(User, id=id)
+    usuario.is_active = False
+    usuario.save()
+    return redirect('lista_usuarios')
+
+@login_required
+def mostrar_usuario(request, id):
+    usuario = get_object_or_404(User, id=id)
+    campos ={
+            "usuario" : usuario.username,
+            "nombre" : usuario.first_name,
+            "apellido" : usuario.last_name,
+            "email" : usuario.email,
+            "rol" : 'Administrador' if usuario.is_superuser else usuario.groups.first().name,
+            'password': '',
+            'password2': ''
+        }
+    return render(request, 'usuarios/detalles.html', {
+            "campos": campos,
+            "roles": Group.objects.all()
+        })

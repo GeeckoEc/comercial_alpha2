@@ -44,6 +44,8 @@
                 <tbody id="lista-usuarios">
 
                     {% for usuario in usuarios %}
+
+                    {% if usuario.is_active %}
                     <tr>
                         <td>{{ usuario.id }}</td>
                         <td>{{ usuario.first_name }}</td>
@@ -58,10 +60,12 @@
                             {% endif %}
                         </td>
                         <td>
+                            <a href="/usuario/detalles/{{ usuario.id }}" class="btn btn-primary" ><i class="bi bi-info-circle"></i></a>
                             <a href="/usuario/editar/{{ usuario.id }}" class="btn btn-warning"><i class="bi bi-pencil"></i></a>
-                            <a href="/eliminar_usuario/{{ usuario.id }}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+                            <a href="/usuario/deshabilitar/{{ usuario.id }}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
                         </td>
                     </tr>
+                    {% endif %}
                     {% endfor %}
 
                 </tbody>

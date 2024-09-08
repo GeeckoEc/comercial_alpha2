@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios,editar_usuario
+from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios, editar_usuario, deshabilitar_usuario, mostrar_usuario
 
 urlpatterns = [
     path("", index, name="index"),
@@ -44,4 +44,6 @@ urlpatterns = [
     path('usuario/registrar/', registrar_usuario, name="registrar_usuario"),
     path('usuarios', lista_usuarios, name="lista_usuarios"),
     path('usuario/editar/<int:id>', editar_usuario, name="editar_usuario"),
+    path('usuario/deshabilitar/<int:id>', deshabilitar_usuario, name="deshabilitar_usuario"),
+    path('usuario/detalles/<int:id>', mostrar_usuario, name="mostrar_usuario"),
 ]
