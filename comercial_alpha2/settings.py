@@ -91,7 +91,11 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "comercial",
         "USER": "root",
+<<<<<<< Updated upstream
         "PASSWORD": "2002",
+=======
+        "PASSWORD": "Romanos13:03",
+>>>>>>> Stashed changes
         "HOST": "localhost",
         "PORT": "3306",
     }
