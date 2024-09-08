@@ -89,9 +89,9 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "raquelita",
+        "NAME": "comercial",
         "USER": "root",
-        "PASSWORD": "",
+        "PASSWORD": "2002",
         "HOST": "localhost",
         "PORT": "3306",
     }

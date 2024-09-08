@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    {% include 'includes/header.html' %}
+</head>
+<body>
+    {% include  'includes/menu.html' %}
+    <div class="container">
+        <div class="row my-5 pt-5">
+            <div class="d-flex justify-content-between mb-3">
+                <h1>Usuarios</h1>
+                <a class="btn btn-primary px-5 justify-content-center align-content-center fs-6 fw-bold" href="{% url 'registrar_usuario' %}"><i class="bi bi-plus-circle"></i> Nuevo</a>
+            </div>
+            <!-- <div class="row px-0 mb-3">
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" name="buscar" id="buscar" class="form-control" placeholder="buscar" onkeyup="buscar(this.value)">
+                        <label for="buscar">Buscar</label>
+                    </div>
+                </div>
+                <div class="col pe-0">
+                    <div class="form-floating">
+                        <select name="estado" id="estado" class="form-select" onchange="cargar()">
+                            <option value="true">Habilitados</option>
+                            <option value="false">Deshabilitados</option>
+                        </select>
+                        <label for="estado">Mostrar clientes</label>
+                    </div>
+                </div>
+            </div> -->
+            <table class="table table-borderless table-hover border">
+                <thead class="table-dark">
+                    <th>id</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>···</th>
+                </thead>
+                <tbody id="lista-usuarios">
+
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.first_name }}</td>
+                        <td>{{ usuario.last_name }}</td>
+                        <td>{{ usuario.username }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>
+                            {% if usuario.is_superuser %}
+                            Administrador
+                            {% else %}
+                            {{ usuario.groups.all.0 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/editar_usuario/{{ usuario.id }}" class="btn btn-warning"><i class="bi bi-pencil"></i></a>
+                            <a href="/eliminar_usuario/{{ usuario.id }}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+    {% include 'includes/scripts.html' %}
+</html>

@@ -13,9 +13,11 @@ from django.db.models.functions import Coalesce
 # from django_ajax.decorators import ajax
 
 from .models import Producto, Kardex, Marca, Compra, Item_Compra, Proveedor, Cliente, Venta, Item_Venta
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group, User
 
-# Create your views here.
-
+from django.db import IntegrityError
 
 class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
@@ -68,7 +70,7 @@ def info_producto (request, producto_id):
     contenido   = {
         'producto': producto,
         'kardex': kardex,
-    }   
+    }
     return render(request, 'productos/info.html', contenido)
 
 def lista_productos (request):
@@ -275,7 +277,7 @@ def gestion_productos (request):
             }
             return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
-            
+
 def crear_compra (request):
     contenido   = {}
     contenido['proveedores']    =   Proveedor.objects.filter(estado=True)
@@ -443,17 +445,17 @@ def gestion_proveedores (request):
             print(estado)
             """ proveedores = Proveedor.objects.filter(
                 Q(estado=estado) |
-                (Q(nombre__icontains=request.POST['buscar']) | 
-                Q(identificacion__icontains=request.POST['buscar']) | 
-                Q(descripcion__icontains=request.POST['buscar']) | 
+                (Q(nombre__icontains=request.POST['buscar']) |
+                Q(identificacion__icontains=request.POST['buscar']) |
+                Q(descripcion__icontains=request.POST['buscar']) |
                 Q(telefono__icontains=request.POST['buscar']) |
                 Q(celular__icontains=request.POST['buscar']))
             ) """
             proveedores = Proveedor.objects.filter(estado=estado).filter(
-                Q(nombre__icontains=request.POST['buscar']) | 
-                Q(identificacion__icontains=request.POST['buscar']) | 
-                Q(descripcion__icontains=request.POST['buscar']) | 
-                Q(telefono__icontains=request.POST['buscar']) | 
+                Q(nombre__icontains=request.POST['buscar']) |
+                Q(identificacion__icontains=request.POST['buscar']) |
+                Q(descripcion__icontains=request.POST['buscar']) |
+                Q(telefono__icontains=request.POST['buscar']) |
                 Q(celular__icontains=request.POST['buscar'])
             )
             lista_proveedores = ProveedorSerializer(proveedores, many=True)
@@ -589,7 +591,7 @@ def crear_venta (request):
 
 def gestion_ventas (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_compra': 
+        if request.POST['accion'] == 'crear_compra':
             try:
                 venta = Venta()
                 venta.factura   =   request.POST['factura']
@@ -775,3 +777,91 @@ def gestion_clientes (request):
                 return JsonResponse(response_data, status=500)
 
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+
+def iniciar_sesion(request):
+    if request.method == 'GET':
+        return render(request, 'usuarios/login.html')
+    elif request.method == 'POST':
+        username  =  request.POST['username']
+        password =  request.POST['password']
+
+        usuario = authenticate(username=username, password=password)
+
+        if usuario is None:
+            return render(request, 'usuarios/login.html', {'error': 'Usuario o contraseña incorrectos.'})
+
+        login(request, usuario)
+        return redirect('index')
+
+@login_required
+def cerrar_sesion(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
+def registrar_usuario(request):
+    campos = {
+        'usuario': '',
+        'nombre': '',
+        'apellido': '',
+        'email': '',
+        'rol': '',
+        'password': '',
+        'password2': ''
+    }
+    if request.method == 'GET':
+        return render(request, 'usuarios/registrar.html', {
+            "roles": Group.objects.all(),
+            "campos": campos
+         })
+    elif request.method == 'POST':
+        campos ={
+                "usuario" : request.POST['usuario'],
+                "nombre" : request.POST['nombre'],
+                "apellido" : request.POST['apellido'],
+                "email" : request.POST['email'],
+                "rol" : request.POST['rol'],
+                "password" : request.POST['password'],
+                "password2" : request.POST['password2']
+        }
+        if '' in campos.values():
+            return render(request, 'usuarios/registrar.html', {
+                "roles": Group.objects.all(),
+                "error": "Todos los campos son requeridos.",
+                "campos": campos
+            })
+
+        if campos['password'] != campos['password2']:
+            return render(request, 'usuarios/registrar.html', {
+                "roles": Group.objects.all(),
+                "error": "Las contraseñas no coinciden.",
+                "campos": campos
+            })
+        else :
+
+            try:
+                usuario = User.objects.create_user(username=campos['usuario'], email=campos['email'], password=campos['password'])
+                usuario.first_name = campos['nombre']
+                usuario.last_name = campos['apellido']
+
+                if campos['rol'] == 'Administrador':
+                    usuario.is_superuser = True
+                else:
+                    grupo = Group.objects.get(name=campos['rol'])
+                    grupo.user_set.add(usuario)
+
+                usuario.save()
+            except IntegrityError:
+                return render(request, 'usuarios/registrar.html', {
+                    "roles": Group.objects.all(),
+                    "error": "El usuario ya existe.",
+                    "campos": campos
+                })
+
+            return redirect('login')
+
+@login_required
+def lista_usuarios(request):
+    usuarios = User.objects.all()
+    return render(request, 'usuarios/lista.html', {'usuarios': usuarios})
