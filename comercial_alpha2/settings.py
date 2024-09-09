@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-import os
+import os, dj_database_url
 from pathlib import Path
 
 import dj_database_url  # para postgresql
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
+WSGI_APPLICATION = "comercial_alpha2.wsgi.application"  ## DESPLIEGUE EN RENDER
 
 
 # Database

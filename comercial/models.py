@@ -22,6 +22,8 @@ class Compra (models.Model): ## TO-DO
     estado          =   models.BooleanField(default=True)
     factura         =   models.CharField(max_length=50, unique=True)
     fecha           =   models.DateTimeField(auto_now_add=True)
+    subtotal        =   models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    iva             =   models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total           =   models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):

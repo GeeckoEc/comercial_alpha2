@@ -17,23 +17,38 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios, editar_usuario, deshabilitar_usuario, mostrar_usuario
+from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios, editar_usuario, deshabilitar_usuario, mostrar_usuario, imprimir_compra, lista_ventas, imprimir_venta
 
 urlpatterns = [
     path("", index, name="index"),
     path("admin/", admin.site.urls),
+
+    ## Productos
     path('productos/info/<int:producto_id>', info_producto, name="info_producto"),
     path('productos/lista/', lista_productos, name="lista_productos"),
     path('productos/gestion/', gestion_productos, name="gestion_productos"),
+
+    ## Compras
     path('compras/crear/', crear_compra, name="crear_compra"),
+    path('compras/imprimir/<int:id>', imprimir_compra, name="imprimir_compra"),
     path('compras/lista', lista_compras, name="lista_compras"),
     path('gestion_compras/', gestion_compras, name="gestion_compras"),
+
+    ## Proveedores
     path('proveedores/lista', lista_proveedores, name="lista_proveedores"),
     path('proveedores/gestion', gestion_proveedores, name="gestion_proveedores"),
+
+    ## Marcas
     path('marcas/lista', lista_marcas, name="lista_marcas"),
     path('marcas/gestion', gestion_marcas, name="gestion_marcas"),
+
+    ## Ventas
     path('ventas/crear', crear_venta, name="crear_venta"),
     path('gestion_ventas', gestion_ventas, name="gestion_ventas"),
+    path('ventas/lista', lista_ventas, name="lista_ventas"),
+    path('ventas/imprimir/<int:id>', imprimir_venta, name="imprimir_venta"),
+
+    ## Clientes
     path('clientes/lista', lista_clientes, name="lista_clientes"),
     path('clientes/gestion', gestion_clientes, name="gestion_clientes"),
 
@@ -46,4 +61,7 @@ urlpatterns = [
     path('usuario/editar/<int:id>', editar_usuario, name="editar_usuario"),
     path('usuario/deshabilitar/<int:id>', deshabilitar_usuario, name="deshabilitar_usuario"),
     path('usuario/detalles/<int:id>', mostrar_usuario, name="mostrar_usuario"),
+
+    # pdf
+    ##""" path('pdf/factura/<int:id>', generar_pdf_venta, name="pdf_factura"), """
 ]

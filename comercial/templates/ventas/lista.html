@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compras</title>
+    <title>Ventas</title>
     {% include 'includes/header.html' %}
 </head>
 <body>
@@ -11,21 +11,21 @@
     <div class="container">
         <div class="row my-5 pt-5">
             <div class="d-flex justify-content-between">
-                <h1>Compras</h1>
-                <button type="button" class="btn btn-primary px-5" onclick="nueva()"><i class="bi bi-plus-circle"></i> Nueva Compra</button>
+                <h1>Ventas</h1>
+                <button type="button" class="btn btn-primary px-5" onclick="nueva()"><i class="bi bi-plus-circle"></i> Nueva Venta</button>
             </div>
             <div class="row my-3 px-0">
                 <dic class="col">
                     <div class="form-floating">
-                        <input type="search" class="form-control" name="buscar" id="buscar" placeholder="Buscar" onchange="bucar(this.value)" onkeyup="buscar(this.value)">
+                        <input type="search" class="form-control" name="buscar" id="buscar" placeholder="Buscar" onchange="buscar(this.value)" onkeyup="buscar(this.value)">
                         <label for="buscar"><i class="bi bi-serach"></i> Buscar</label>
                     </div>
                 </dic>
                 <dic class="col pe-0">
                     <div class="form-floating">
                         <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="cargar()">
-                            <option value="true">Compras Habilitadas</option>
-                            <option value="false">Compras Deshabilitadas</option>
+                            <option value="true">Ventas Habilitadas</option>
+                            <option value="false">Ventas Deshabilitadas</option>
                         </select>
                         <label for="estado">Estado</label>
                     </div>
@@ -34,16 +34,16 @@
             <table class="table table-borderless table-hover border">
                 <thead class="table-dark">
                     <th style="width: 150px;">Fecha y Hora</th>
-                    <th>Proveedor</th>
+                    <th>Cliente</th>
                     <th style="width: 80px;">Total</th>
                     <th style="width: 160px; text-align: center;">···</th>
                 </thead>
-                <tbody id="lista-compras"></tbody>
+                <tbody id="lista-ventas"></tbody>
             </table>
         </div>
     </div>
     {% include 'includes/modal.html' %}
 </body>
     {% include 'includes/scripts.html' %}
-    {% include 'includes/compras/js-compras.html' %}
+    {% include 'includes/ventas/js-ventas.html' %}
 </html>

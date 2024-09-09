@@ -44,6 +44,10 @@
         })
     }
 
+    function nueva () {
+        window.location.href = '{% url "crear_compra" %}'
+    }
+
     function ver (id) {
         $.ajax({
             url:        '{% url "gestion_compras" %}',
@@ -97,23 +101,93 @@
         })
     }
 
+    function imprimir (id) {
+        window.open('/compras/imprimir/'+id, '_blank');
+    }
+
+    function anular (id) {
+        $.alert({
+            icon:               'fa fa-circle-xmark',
+            title:              'Anular Compra',
+            type:               'red',
+            content:            `¿Está seguro que desea anular la compra?`, 
+            theme:              'modern',
+            animateFromElement: false,
+            buttons: {
+                Sí:  () => {
+                    $.ajax({
+                        type:       'POST',
+                        dataType:   'JSON',
+                        url:        '{% url "gestion_compras" %}',
+                        data:       {
+                            accion:     'anular_compra',
+                            id:         id
+                        }
+                    }).then((respuesta) => {
+                        mensaje('fa fa-circle-check',  'Anular Compra', 'green', respuesta.mensaje)
+                        cargar()
+                    }).catch((error) => {
+                        let respuesta =  JSON.parse(error.responseText)
+                        mensaje('fa fa-circle-xmark',  'Error al anular la compra', 'red',  respuesta.mensaje)
+                    })
+                },
+                No: ()=>{}
+            }
+        })
+    }
+
+    function habilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-xmark',
+            title:              'Habiitar Compra',
+            type:               'red',
+            content:            `¿Está seguro que desea habilitar la compra?`, 
+            theme:              'modern',
+            animateFromElement: false,
+            buttons: {
+                Sí:  () => {
+                    $.ajax({
+                        type:       'POST',
+                        dataType:   'JSON',
+                        url:        '{% url "gestion_compras" %}',
+                        data:       {
+                            accion:     'habilitar_compra',
+                            id:         id
+                        }
+                    }).then((respuesta) => {
+                        mensaje('fa fa-circle-check',  'Habilitar Compra', 'green', respuesta.mensaje)
+                        cargar()
+                    }).catch((error) => {
+                        let respuesta =  JSON.parse(error.responseText)
+                        mensaje('fa fa-circle-xmark',  'Error al habilitar la compra', 'red',  respuesta.mensaje)
+                    })
+                },
+                No: ()=>{}
+            }
+        })
+    }
+
     function lista (compras) {
         if(compras.length == 0) {
-            $('#lista-compras').html('<tr><td colspan="5" style="text-align: center; color: gray">No hay compras registradas</td></tr>');
+            $('#lista-compras').html('<tr><td colspan="5" style="text-align: center; color: gray">No hay compras para mostrar.</td></tr>');
             return false;
         }
         $('#lista-compras').html('')
         $.each(compras, (index, compra) => {
             let fecha = new Date(compra.fecha)
+            let boton = `<button type="button" class="btn btn-danger" onclick="anular(${compra.id})"><i class="bi bi-x"></i></button>`
+            if (!JSON.parse($('#estado').val())) {
+                boton = `<button type="button" class="btn btn-success" onclick="habilitar(${compra.id})"><i class="bi bi-check-circle"></i></button>`
+            }
             $('#lista-compras').append(`
                 <tr>
                     <td style="vertical-align: middle;">${(`0${fecha.getDate()}`).slice(-2)}-${(`0${fecha.getMonth() + 1}`).slice(-2)}-${fecha.getFullYear()} ${fecha.getHours()}:${fecha.getMinutes()}</td>
-                    <td style="vertical-align: middle; text-align: end;">${compra.proveedor_nombre}</td>
-                    <td style="vertical-align: middle; text-align: end;">${compra.total}</td>
+                    <td style="vertical-align: middle; ">${compra.proveedor_nombre}</td>
+                    <td style="vertical-align: middle; text-align: right;">${compra.total}</td>
                     <td>
                         <button type="button" class="btn btn-primary" onclick="ver(${compra.id})"><i class="bi bi-info-circle"></i></button>
                         <button type="button" class="btn btn-primary" onclick="imprimir(${compra.id})"><i class="bi bi-printer"></i></button>
-                        <button type="button" class="btn btn-danger" onclick="anular(${compra.id})"><i class="bi bi-x"></i></button>
+                        ${boton}
                     </td>
                 </tr>
             `)

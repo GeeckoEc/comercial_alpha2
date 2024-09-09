@@ -321,7 +321,7 @@
                                 icon:               'fa fa-circle-check',
                                 title:              'Procesar Venta',
                                 type:               'green',
-                                content:            respuesta.message + '\n¿Desea realizar una nueva ventas?',
+                                content:            respuesta.message + '\n¿Desea realizar una nueva venta?',
                                 theme:              'modern',
                                 animateFromElement: false,
                                 buttons:            {
@@ -434,6 +434,10 @@
         } else {
             $('#lista-productos').html('<tr><td colspan="6" style="text-align: center; color: gray;">No hay productos seleccionados.</td></tr>')
         }
+    }
+
+    function regresar () {
+        window.location.href = '{% url "lista_ventas" %}'
     }
 
     function mensaje (icono, titulo, color, mensaje) {

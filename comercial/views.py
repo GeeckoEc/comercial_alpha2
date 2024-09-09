@@ -19,6 +19,12 @@ from django.contrib.auth.models import Group, User
 
 from django.db import IntegrityError
 
+""" # pdf
+from weasyprint import HTML, CSS
+from weasyprint.text.fonts import FontConfiguration
+from django.template.loader import get_template
+from pathlib import Path """
+
 class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
     kardex_precio = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True,  default=0)
@@ -67,6 +73,23 @@ class KardexSerializer(serializers.ModelSerializer):
         model = Kardex
         fields = '__all__'
 
+class VentaSerializer(serializers.ModelSerializer):
+    cliente_nombre          =   serializers.CharField(source='cliente.nombre')
+    cliente_apellido        =   serializers.CharField(source='cliente.apellido')
+    cliente_identificacion  =   serializers.CharField(source='cliente.identificacion')
+
+    class Meta:
+        model = Venta
+        fields = '__all__'
+
+class Item_VentaSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.CharField(source='producto.nombre')
+    producto_marca = serializers.CharField(source='producto.marca.nombre')
+
+    class Meta:
+        model = Item_Venta
+        fields = '__all__'
+    
 def index (request):
     return render(request, 'index.html')
 
@@ -302,6 +325,19 @@ def crear_compra (request):
 def lista_compras (request):
     return render(request, 'compras/lista.html')
 
+def imprimir_compra (request, id):
+    compra  =   get_object_or_404(Compra, id=id)
+    items   =   compra.item_compra_set.all()
+    resultados = []
+    for item in items:
+        total = float(item.cantidad) * float(item.costo)
+        resultados.append((item, total))
+    contenido   =   {
+        'compra':   compra,
+        'items':   resultados,
+    }
+    return render(request, 'compras/imprimir.html', contenido)
+
 def gestion_compras (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista_compras':
@@ -329,6 +365,8 @@ def gestion_compras (request):
                 compra.factura      =   request.POST['factura']
                 compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
                 compra.fecha        =   datetime.now()
+                compra.subtotal     =   request.POST['subtotal']
+                compra.iva          =   request.POST['iva']
                 compra.total        =   request.POST['total']
                 compra.save()
                 items = json.loads(request.POST['items'])
@@ -338,7 +376,7 @@ def gestion_compras (request):
                     nuevo_kardex    =   Kardex.objects.create(
                         producto        =   producto,
                         transaccion     =   'Compra',
-                        costo           =   item['costo'],
+                        costo           =   float(item['costo'])*1.15,
                         precio          =   kardex.precio,
                         cantidad        =   item['cantidad'],
                         stock           =   int(kardex.stock) + int(item['cantidad'])
@@ -347,13 +385,45 @@ def gestion_compras (request):
                         compra          =   compra,
                         producto        =   producto,
                         cantidad        =   item['cantidad'],
-                        costo           =   item['costo']
+                        costo           =   float(item['costo'])*1.15
                     )
                 return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
             except Exception as e:
                 response_data   =   {
                     'success': False,
                     'message': 'Error al crear la compra: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'anular_compra':
+            try:
+                compra = Compra.objects.get(id=request.POST['id'])
+                compra.estado = False
+                compra.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La compra fue anulada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al anular la compra: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'habilitar_compra':
+            try:
+                compra = Compra.objects.get(id=request.POST['id'])
+                compra.estado = True
+                compra.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La compra fue habilitada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al habilitar la compra: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'info_compra':
@@ -373,7 +443,8 @@ def gestion_compras (request):
                     estado = False
                 compras = Compra.objects.filter(estado=estado).filter(
                     Q(factura__icontains=request.POST['buscar']) |
-                    Q(proveedor__nombre__icontains=request.POST['buscar'])
+                    Q(proveedor__nombre__icontains=request.POST['buscar']) |
+                    Q(proveedor__identificacion__icontains=request.POST['buscar'])
                 ).prefetch_related('proveedor')
                 contenido = {
                     'compras': CompraSerializer(compras, many=True).data,
@@ -624,14 +695,83 @@ def crear_venta (request):
     contenido['clientes']    =   Cliente.objects.filter(estado=True)
     return render(request, 'ventas/crear.html', contenido)
 
+def lista_ventas (request):
+    contenido = {}
+    return render(request, 'ventas/lista.html', contenido)
+
+def imprimir_venta (request, id):
+    venta  =   get_object_or_404(Venta, id=id)
+    items   =   venta.item_venta_set.all()
+    resultados = []
+    for item in items:
+        total = float(item.cantidad) * float(item.precio)
+        resultados.append((item, total))
+    contenido   =   {
+        'venta':   venta,
+        'items':   resultados,
+    }
+    return render(request, 'ventas/imprimir.html', contenido)
+
 def gestion_ventas (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_venta':
+        if request.POST['accion'] == 'lista_ventas':
+            try:
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                ventas = Venta.objects.filter(estado=estado).prefetch_related('cliente')
+                contenido   = {
+                    'ventas': VentaSerializer(ventas, many=True).data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al listar las ventas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'info_venta':
+            venta = Venta.objects.get(id=request.POST['id'])
+            items = Item_Venta.objects.filter(venta=venta).prefetch_related('producto', 'producto__marca')
+            contenido = {
+                'venta': VentaSerializer(venta).data,
+                'items':  Item_VentaSerializer(items, many=True).data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'buscar':
+            try:
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                ventas = Venta.objects.filter(estado=estado).filter(
+                    Q(factura__icontains=request.POST['buscar']) |
+                    Q(cliente__nombre__icontains=request.POST['buscar']) |
+                    Q(cliente__apellido__icontains=request.POST['buscar']) |
+                    Q(cliente__identificacion__icontains=request.POST['buscar'])
+                ).prefetch_related('cliente')
+                contenido = {
+                    'ventas': VentaSerializer(ventas, many=True).data,
+                    'success': True,
+                }
+                return  JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al buscar las ventas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'crear_venta':
             try:
                 venta = Venta()
                 venta.factura   =   request.POST['factura']
                 venta.cliente   =   Cliente.objects.get(identificacion=request.POST['cliente'])
                 venta.fecha     =   datetime.now()
+                venta.subtotal  =   request.POST['subtotal']
+                venta.iva       =   request.POST['iva']
                 venta.total     =   request.POST['total']
                 venta.save()
                 for item in json.loads(request.POST['items']):
@@ -644,7 +784,6 @@ def gestion_ventas (request):
                         precio      =   item['precio'],
                         cantidad    =   item['cantidad'],
                         stock       =   int(kardex.stock) - int(item['cantidad'])
-
                     )
                     Item_Venta.objects.create(
                         venta       =   venta,
@@ -663,7 +802,39 @@ def gestion_ventas (request):
                     'message': 'Error al crear la venta: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
-        if request.POST['accion'] == 'siguiente_factura':
+        elif request.POST['accion'] == 'anular_venta':
+            try:
+                venta = Venta.objects.get(id=request.POST['id'])
+                venta.estado = False
+                venta.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La venta fue anulada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al anular la venta: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'habilitar_venta':
+            try:
+                venta = Venta.objects.get(id=request.POST['id'])
+                venta.estado = True
+                venta.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La venta fue habilitada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al habilitar la venta: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'siguiente_factura':
             try:
                 factura = Venta.objects.latest('fecha').factura
                 next_factura = str(int(factura.lstrip('0')) + 1).zfill(12)
@@ -838,7 +1009,7 @@ def iniciar_sesion(request):
             return render(request, 'usuarios/login.html', {'error': 'Usuario o contraseña incorrectos.'})
 
         login(request, usuario)
-        return redirect('index')
+        return redirect('lista_compras')
 
 @login_required
 def cerrar_sesion(request):
@@ -1008,3 +1179,41 @@ def mostrar_usuario(request, id):
             "campos": campos,
             "roles": Group.objects.all()
         })
+
+
+
+# Generar pdf's
+""" @login_required
+def generar_pdf_venta(request, id):
+
+    venta = get_object_or_404(Venta, id=id)
+
+    cliente = venta.cliente
+
+    items = Item_Venta.objects.filter(venta=venta).select_related('producto')
+
+    filename = f'venta_{venta.factura}.pdf'
+
+    template = get_template('pdf/reporte.html',)
+    context = {
+        'title': 'Reporte de venta',
+        'venta': venta,
+        'items': items,
+        'cliente': cliente
+    }
+    print(items)
+    html = template.render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    font_config=FontConfiguration()
+    html = HTML(string=html)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    css = CSS(filename=f'{BASE_DIR}/comercial/static/pdf/styles.css', font_config=font_config)
+    result  = html.write_pdf(encoding='utf-8', stylesheets=[css],font_config=font_config)
+    response.write(result)
+
+    return response
+
+    # return render(request, 'pdf/reporte.html') """
