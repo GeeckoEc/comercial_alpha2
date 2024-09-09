@@ -9,4 +9,4 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 
 # Apply any outstanding database migrations
-python nanage.py migrate
+python manage.py migrate
