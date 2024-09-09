@@ -27,8 +27,6 @@ SECRET_KEY = "django-insecure-dqq-vw4))kp^**knr$q$ui!fbpch3r*j3lhv8@i@r2vn4e)ie=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -156,3 +154,6 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+ALLOWED_HOSTS = ['localhost', 'https://comercial-alpha2.onrender.com/'] # para render
+CSRF_TRUSTED_ORIGINS = ['https://comercial-alpha2.onrender.com/'] # para render
