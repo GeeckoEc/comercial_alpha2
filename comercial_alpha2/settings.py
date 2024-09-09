@@ -156,4 +156,4 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ALLOWED_HOSTS = ['localhost', 'comercial-alpha2.onrender.com']  # para render
-CSRF_TRUSTED_ORIGINS = ['comercial-alpha2.onrender.com']  # para render
+CSRF_TRUSTED_ORIGINS = ['https://comercial-alpha2.onrender.com']  # para render
