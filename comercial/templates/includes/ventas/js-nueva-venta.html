@@ -1,4 +1,9 @@
 <script>
+    let requisitos = [{
+        cliente:        false,
+        seleccionados:  false
+    }]
+
     $(document).ready(() => {
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
@@ -7,6 +12,9 @@
         });
         clientes()
         lista_seleccionados()
+        nueva_factura()
+        verificar_seleccionados()
+        verificar()
     })
 
     function clientes () {
@@ -167,11 +175,24 @@
                         </table>
                     `)
                     $.each(data.productos, function (index, producto) {
+                        let sin_stock = ' disabled'
+                        if  (producto.kardex_stock > 0) {
+                            sin_stock = ''
+                        }
+
                         $('#productos-disponibles').append(`
                             <tr>
-                                <td>${producto.marca_nombre} - ${producto.nombre}<br><span class="text-muted"><small>Precio: $<span id="precio-${producto.id}">${producto.precio}</span></small></span></td>
                                 <td>
-                                    <button class="btn btn-primary" onclick="agregar(${producto.id})"><i class="bi bi-check2-circle"></i></button>
+                                    ${producto.marca_nombre} - ${producto.nombre}<br>
+                                    <span class="text-muted">
+                                        <small>
+                                            Precio: $<span id="precio-${producto.id}">${producto.precio}</span> - 
+                                            Stock: <span id="stock-${producto.id}">${producto.kardex_stock}</span>
+                                        </small>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="agregar(${producto.id})" ${sin_stock}><i class="bi bi-check2-circle"></i></button>
                                 </td>
                             </tr>
                         `)
@@ -193,6 +214,7 @@
     function agregar (id) {
         let producto = lista_productos.find((item) => item.id === id);
         let precio_producto = $('#precio-'+id).html()
+        let stock_producto = $('#stock-'+id).html()
         $('#productos-modal').modal('toggle')
         $.confirm({
             icon:               'fa fa-boxes-stacked',
@@ -201,7 +223,7 @@
             content:            '' + 
                                 '<p>Ingresa la cantidad para <strong>' + producto.nombre + ' ' + producto.presentacion + '</strong>.</p>' +     
                                 '<div class="form-floating">' +
-                                '<input type="number" id="cantidad" name="cantidad" class="form-control" placeholder="cantidad">' + 
+                                '<input type="number" min="1" max="'+ stock_producto +'" id="cantidad" name="cantidad" class="form-control" placeholder="cantidad" value="1">' + 
                                 '<label for="cantidad">Cantidad</label>' +
                                 '</div>' +
                                 '<div class="form-floating mt-3">' +
@@ -221,6 +243,7 @@
                     }
                     lista_seleccionados()
                     $('#modal').modal('toggle')
+                    verificar_seleccionados()
                 }, 
                 Cancelar:   function () {}
             }
@@ -244,9 +267,91 @@
                     seleccionados = seleccionados.filter(item => item.id !== id)
                     sessionStorage.setItem('seleccionados', JSON.stringify(seleccionados))
                     lista_seleccionados()
+                    if (JSON.parse(sessionStorage.getItem('seleccionados')).length > 0) {
+                        requisitos.seleccionados = true
+                    } else {
+                        requisitos.seleccionados = false
+                    }
+                    verificar()
                 },
                 No: () => {}
             }
+        })
+    }
+
+    function procesar () {
+        $.alert({
+            icon:               'fa fa-circle-exclamation',
+            title:              'Procesar Venta',
+            type:               'red',
+            content:            '¿Desea procesar la venta?',
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Sí: () => {
+                    $.ajax({
+                        url:        '{% url "gestion_ventas" %}',
+                        type:       'POST',
+                        dataType:   'JSON',
+                        data:       {
+                            accion:     'crear_venta',
+                            items:      JSON.stringify(JSON.parse(sessionStorage.getItem('seleccionados'))),
+                            cliente:    $('#cliente').val(),
+                            factura:    $('#factura').val(),
+                            subtotal:   $('#subtotal').val(),
+                            iva:        $('#iva').val(),
+                            total:      $('#total').val()
+                        }
+                    }).then((respuesta) => {
+                        if (respuesta.success) {
+                            $('#cliente').val('')
+                            $('#factura').val('')
+                            $('#nombre-completo').val('')
+                            $('#mostrar-direccion').val('')
+                            $('#mostrar-telefono').val('')
+                            $('#mostrar-celular').val('')
+                            $('#total').val('')
+                            $('#iva').val('')
+                            $('#subtotal').val('')
+
+                            sessionStorage.removeItem('seleccionados')
+                            nueva_factura()
+                            lista_seleccionados()
+                            $.alert({
+                                icon:               'fa fa-circle-check',
+                                title:              'Procesar Venta',
+                                type:               'green',
+                                content:            respuesta.message + '\n¿Desea realizar una nueva ventas?',
+                                theme:              'modern',
+                                animateFromElement: false,
+                                buttons:            {
+                                    Sí: () => {
+                                        
+                                    }, 
+                                    No: () => {window.location.href = '{% url "index" %}'}
+                                }
+                            })
+                        }
+                    }).catch((error) => {
+                        let respuesta = JSON.parse(error.responseText)
+                        mensaje('fa fa-circle-xmark', 'Error al crear la venta: ','red',  respuesta.message)
+                    })
+                },
+                No: () => {}
+            }
+        })
+    }
+
+    function nueva_factura () {
+        $.ajax({
+            url:        '{% url "gestion_ventas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'siguiente_factura',
+            }
+        }).then((respuesta)=>{
+            $('#factura').val(respuesta.factura)
         })
     }
 
@@ -299,25 +404,31 @@
             }).done(function (respuesta){
                 $('#productos-seleccionados').html('')
                 let seleccionados = JSON.parse(sessionStorage.getItem('seleccionados'))
-                let total = 0.00
+                let subtotal    =   0.00
+                let  iva        =   0.00
+                let  total      =   0.00
                 $('#lista-productos').html('')
                 $.each(respuesta.productos, function(index, producto){
                     let precio  = seleccionados.find(item => item.id == producto.id).precio
                     let cantidad = seleccionados.find(item => item.id == producto.id).cantidad
-                    total = parseFloat(total) + (parseFloat(precio) * parseInt(cantidad))
+                    subtotal = parseFloat(subtotal) + (parseFloat(precio/1.15) * parseInt(cantidad))
+                    iva =  parseFloat(subtotal) * 0.15
+                    total = parseFloat(subtotal) + parseFloat(iva)
                     $('#lista-productos').append(`
                         <tr>
                             <td style="vertical-align: middle;">${index + 1}</td>
                             <td style="vertical-align: middle;">${producto.nombre} ${producto.marca_nombre} ${producto.presentacion}</td>
                             <td style="vertical-align: middle; text-align: right;">${cantidad}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat(precio).toFixed(2)}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat((precio) * parseInt(cantidad)).toFixed(2)}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat(precio/1.15).toFixed(2)}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat((precio/1.15) * parseInt(cantidad)).toFixed(2)}</td>
                             <td style="vertical-align: middle;">
                                 <button class="btn btn-danger" onclick="quitar_producto(${producto.id})"><i class="bi bi-x"></i></button>
                             </td>
                         </tr>
                     `)
                 })
+                $('#subtotal').val(subtotal.toFixed(2))
+                $('#iva').val(iva.toFixed(2))
                 $('#total').val(total.toFixed(2))       
             })
         } else {
@@ -338,4 +449,31 @@
             }
         })
     }
+
+    function verificar_seleccionados () {
+        if (JSON.parse(sessionStorage.getItem('seleccionados')).length > 0) {
+            requisitos.seleccionados = true
+        } else {
+            requisitos.seleccionados = false
+        }
+        verificar()
+    }    
+
+    function verificar () {
+        if (requisitos.cliente && requisitos.seleccionados) {
+            $('#procesar').prop('disabled', false)
+        } else {
+            $('#procesar').prop('disabled', true)
+        }
+    }
+
+    document.getElementById('cliente').addEventListener('input', function() {
+        var cliente = this.value;
+        if (cliente !== '0' && cliente !== '') {
+            requisitos.cliente  =   true;
+        } else {
+            requisitos.cliente  =   false;
+        }
+        verificar()
+    });
 </script>

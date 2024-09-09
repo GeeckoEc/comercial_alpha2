@@ -14,22 +14,20 @@
             <div>
                 <div class="row my-3">
                     <div class="col">
-                        <div class="form-floating">
-                            <input type="text" name="factura" id="factura" class="form-control" placeholder="factura">
-                            <label for="factura">Factura</label>
+                        <div class="input-group">
+                            <div class="form-floating">
+                                <input type="text" name="cliente" id="cliente" class="form-control" placeholder="cliente" list="clientes" onchange="datos_cliente(this.value)">
+                                <label for="cliente">Cliente</label>
+                                <datalist id="clientes"></datalist>
+                            </div>
+                            <button class="btn btn-primary" onclick="nuevo_cliente()"><i class="bi bi-plus-circle"></i> Nuevo Cliente</button>
                         </div>
                     </div>
                     <div class="col">
-                    <div class="input-group">
                         <div class="form-floating">
-                            <input type="text" name="cliente" id="cliente" class="form-control" placeholder="cliente" list="clientes" onchange="datos_cliente(this.value)">
-                            <label for="cliente">Cliente</label>
-                            <datalist id="clientes"></datalist>
+                            <input type="text" name="factura" id="factura" class="form-control" placeholder="factura" disabled>
+                            <label for="factura">Factura</label>
                         </div>
-                        <button class="btn btn-primary" onclick="nuevo_cliente()"><i class="bi bi-plus-circle"></i> Nuevo Cliente</button>
-                        
-                    </div>
-                        
                     </div>
                 </div>
                 <div class="row">
@@ -78,17 +76,27 @@
                 <tbody id="lista-productos"></tbody>
             </table>
         </div>
-        <div class="row my-3">
+        <div class="row mb-3">
             <div class="col"></div>
             <div class="col"></div>
             <div class="col"></div>
-            <div class="col">
+            <div class="col p-0">
                 <div class="input-group my-2">
-                    <span class="input-group-text">Total <i class="bi bi-currency-dollar"></i></span>
+                    <span style="width: 120px;" class="input-group-text">Subtotal <i class="bi bi-currency-dollar"></i></span>
+                    <input type="text" class="form-control" style="text-align: right;" name="subtotal" id="subtotal" title="subtotal" readonly>
+                    <label for="total"></label>
+                </div>
+                <div class="input-group my-2">
+                    <span style="width: 120px;" class="input-group-text">IVA <i class="bi bi-currency-dollar"></i></span>
+                    <input type="text" class="form-control" style="text-align: right;" name="iva" id="iva" title="iva" readonly>
+                    <label for="total"></label>
+                </div>
+                <div class="input-group my-2">
+                    <span style="width: 120px;" class="input-group-text">Total <i class="bi bi-currency-dollar"></i></span>
                     <input type="text" class="form-control" style="text-align: right;" name="total" id="total" title="total" readonly>
                     <label for="total"></label>
                 </div>
-                <button class="btn btn-success form-control" onclick="procesar()"><i class="bi bi-check-circle"></i> Procesar Compra</button>
+                <button class="btn btn-success form-control" id="procesar" onclick="procesar()"><i class="bi bi-check-circle"></i> Procesar Venta</button>
             </div>
         </div>
     </div>
@@ -96,4 +104,5 @@
 </body>
     {% include 'includes/scripts.html' %}
     {% include 'includes/ventas/js-nueva-venta.html' %}
+    {% include 'includes/ventas/js-validaciones-nueva-venta.html' %}
 </html>

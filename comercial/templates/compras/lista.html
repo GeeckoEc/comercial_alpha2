@@ -23,7 +23,7 @@
                 </dic>
                 <dic class="col pe-0">
                     <div class="form-floating">
-                        <select name="estado" id="estado" class="form-select" placeholder="estado">
+                        <select name="estado" id="estado" class="form-select" placeholder="estado" onchange="cargar()">
                             <option value="true">Compras Habilitadas</option>
                             <option value="false">Compras Deshabilitadas</option>
                         </select>
@@ -33,10 +33,10 @@
             </div>
             <table class="table table-borderless table-hover border">
                 <thead class="table-dark">
-                    <th>Fecha</th>
+                    <th style="width: 150px;">Fecha y Hora</th>
                     <th>Proveedor</th>
-                    <th>Total</th>
-                    <th>···</th>
+                    <th style="width: 80px;">Total</th>
+                    <th style="width: 160px; text-align: center;">···</th>
                 </thead>
                 <tbody id="lista-compras"></tbody>
             </table>

@@ -80,10 +80,10 @@ class Item_Compra (models.Model):
 
 
 class Kardex (models.Model):
-    detalles        =   [('Compra','Compra'), ('Venta','Venta')]
+    transacciones   =   [('Compra','Compra'), ('Venta','Venta')]
 
     producto        =   models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='kardex')
-    transaccion     =   models.CharField(max_length=20, choices=detalles, default='Compra')
+    transaccion     =   models.CharField(max_length=20, choices=transacciones, default='Compra')
     fecha           =   models.DateTimeField(auto_now_add=True)
     cantidad        =   models.IntegerField(default=0)
     costo           =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -92,7 +92,7 @@ class Kardex (models.Model):
 
     def __str__(self):
         ## return f"{self.producto.nombre} - {self.fecha}"
-        return f"Operación: {self.detalle} - Fecha: {self.fecha} - Cantidad: {self.cantidad} - Existencias: {self.saldo}"
+        return f"Operación: {self.transaccion} - Fecha: {self.fecha} - Cantidad: {self.cantidad} - Existencias: {self.stock}"
 
 
 class Cliente (models.Model):
@@ -118,6 +118,8 @@ class Venta (models.Model):
     cliente         =   models.ForeignKey(Cliente, on_delete=models.CASCADE)
     fecha           =   models.DateTimeField()
     factura         =   models.CharField(max_length=50, unique=True)
+    subtotal        =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    iva             =   models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total           =   models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):

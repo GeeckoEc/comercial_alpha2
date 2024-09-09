@@ -89,13 +89,9 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "comercial",
+        "NAME": "raquelita",
         "USER": "root",
-<<<<<<< Updated upstream
-        "PASSWORD": "2002",
-=======
-        "PASSWORD": "Romanos13:03",
->>>>>>> Stashed changes
+        "PASSWORD": "",
         "HOST": "localhost",
         "PORT": "3306",
     }

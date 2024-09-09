@@ -47,11 +47,17 @@ class ClienteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class  CompraSerializer(serializers.ModelSerializer):
+    proveedor_nombre = serializers.CharField(source='proveedor.nombre')
+    proveedor_identificacion = serializers.CharField(source='proveedor.identificacion')
+
     class Meta:
         model = Compra
         fields = '__all__'
 
 class Item_CompraSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.CharField(source='producto.nombre')
+    producto_marca = serializers.CharField(source='producto.marca.nombre')
+
     class Meta:
         model = Item_Compra
         fields = '__all__'
@@ -91,7 +97,7 @@ def gestion_productos (request):
             kardex_costo = kardex_subquery.values('costo')[:1]
             kardex_precio = kardex_subquery.values('precio')[:1]
             kardex_stock = kardex_subquery.values('stock')[:1]
-            productos = Producto.objects.filter(estado=estado).annotate(
+            productos = Producto.objects.filter(estado=estado).select_related('marca').annotate(
                 kardex_costo=Subquery(kardex_costo) if kardex else Coalesce(0),
                 kardex_precio=Subquery(kardex_precio) if  kardex else Coalesce(0),
                 kardex_stock=Subquery(kardex_stock)  if kardex else Coalesce(0),
@@ -107,10 +113,20 @@ def gestion_productos (request):
             return JsonResponse(contenido, status=201)
         elif request.POST['accion'] == 'lista_filtrada':
             if request.POST['filtrar'] == 'null':
-                productos = Producto.objects.filter(estado=True)
+                productos = Producto.objects.filter(estado=True).select_related('marca').annotate(
+                    kardex_stock=Subquery(
+                        Kardex.objects.filter(producto=OuterRef('pk'))
+                        .order_by('-fecha').values('stock')[:1]
+                    )
+                )
             else:
                 id = request.POST['filtrar']
-                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion').select_related('marca')
+                productos = Producto.objects.exclude(id__in=json.loads(id)).defer('descripcion').select_related('marca').annotate(
+                    kardex_stock=Subquery(
+                        Kardex.objects.filter(producto=OuterRef('pk'))
+                        .order_by('-fecha').values('stock')[:1]
+                    )
+                )
             contenido = {
                 'productos': ProductoSerializer(productos, many=True).data,
                 'success': True,
@@ -294,7 +310,7 @@ def gestion_compras (request):
                     estado = True
                 else:
                     estado = False
-                compras = Compra.objects.filter(estado=estado)
+                compras = Compra.objects.filter(estado=estado).prefetch_related('proveedor')
                 lista_compras = CompraSerializer(compras, many=True)
                 contenido   = {
                     'compras': lista_compras.data,
@@ -342,15 +358,34 @@ def gestion_compras (request):
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'info_compra':
             compra = Compra.objects.get(id=request.POST['id'])
-            compra_serializer = CompraSerializer(compra)
-            items = Item_Compra.objects.filter(compra=compra)
-            items_serializer = Item_CompraSerializer(items, many=True)
+            items = Item_Compra.objects.filter(compra=compra).prefetch_related('producto', 'producto__marca')
             contenido = {
-                'compra': compra_serializer.data,
-                'items':  items_serializer.data,
+                'compra': CompraSerializer(compra).data,
+                'items':  Item_CompraSerializer(items, many=True).data,
                 'success': True,
             }
             return JsonResponse(contenido, status=201)
+        elif  request.POST['accion'] == 'buscar':
+            try:
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                compras = Compra.objects.filter(estado=estado).filter(
+                    Q(factura__icontains=request.POST['buscar']) |
+                    Q(proveedor__nombre__icontains=request.POST['buscar'])
+                ).prefetch_related('proveedor')
+                contenido = {
+                    'compras': CompraSerializer(compras, many=True).data,
+                    'success': True,
+                }
+                return  JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al buscar las compras: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 def lista_proveedores (request):
@@ -591,17 +626,17 @@ def crear_venta (request):
 
 def gestion_ventas (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_compra':
+        if request.POST['accion'] == 'crear_venta':
             try:
                 venta = Venta()
                 venta.factura   =   request.POST['factura']
-                venta.cliente   =   Cliente.objects.get(id=request.POST['cliente'])
+                venta.cliente   =   Cliente.objects.get(identificacion=request.POST['cliente'])
                 venta.fecha     =   datetime.now()
                 venta.total     =   request.POST['total']
                 venta.save()
                 for item in json.loads(request.POST['items']):
-                    producto = Producto.objects.get(id=item['id'])
-                    kardex  =    producto.kardex.latest('fecha')
+                    producto    =   Producto.objects.get(id=item['id'])
+                    kardex      =   producto.kardex.latest('fecha')
                     Kardex.objects.create(
                         producto    =   producto,
                         transaccion =   'Venta',
@@ -628,6 +663,17 @@ def gestion_ventas (request):
                     'message': 'Error al crear la venta: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
+        if request.POST['accion'] == 'siguiente_factura':
+            try:
+                factura = Venta.objects.latest('fecha').factura
+                next_factura = str(int(factura.lstrip('0')) + 1).zfill(12)
+            except Venta.DoesNotExist:
+                next_factura = '001001000000001'
+            contenido = {
+                'factura': next_factura,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 def lista_clientes (request):
