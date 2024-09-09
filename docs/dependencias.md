@@ -18,3 +18,8 @@
 
 ## djangorestframework
     pip3 install djangorest
+
+## weasyprint
+    pip3 install weasyprint
+
+    pip install dj-database-url

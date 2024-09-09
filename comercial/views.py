@@ -19,11 +19,11 @@ from django.contrib.auth.models import Group, User
 
 from django.db import IntegrityError
 
-# pdf
+""" # pdf
 from weasyprint import HTML, CSS
 from weasyprint.text.fonts import FontConfiguration
 from django.template.loader import get_template
-from pathlib import Path
+from pathlib import Path """
 
 class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
@@ -699,6 +699,19 @@ def lista_ventas (request):
     contenido = {}
     return render(request, 'ventas/lista.html', contenido)
 
+def imprimir_venta (request, id):
+    venta  =   get_object_or_404(Venta, id=id)
+    items   =   venta.item_venta_set.all()
+    resultados = []
+    for item in items:
+        total = float(item.cantidad) * float(item.precio)
+        resultados.append((item, total))
+    contenido   =   {
+        'venta':   venta,
+        'items':   resultados,
+    }
+    return render(request, 'ventas/imprimir.html', contenido)
+
 def gestion_ventas (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista_ventas':
@@ -787,6 +800,38 @@ def gestion_ventas (request):
                 response_data = {
                     'success': False,
                     'message': 'Error al crear la venta: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'anular_venta':
+            try:
+                venta = Venta.objects.get(id=request.POST['id'])
+                venta.estado = False
+                venta.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La venta fue anulada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al anular la venta: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'habilitar_venta':
+            try:
+                venta = Venta.objects.get(id=request.POST['id'])
+                venta.estado = True
+                venta.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La venta fue habilitada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al habilitar la venta: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'siguiente_factura':
@@ -1138,7 +1183,7 @@ def mostrar_usuario(request, id):
 
 
 # Generar pdf's
-@login_required
+""" @login_required
 def generar_pdf_venta(request, id):
 
     venta = get_object_or_404(Venta, id=id)
@@ -1171,4 +1216,4 @@ def generar_pdf_venta(request, id):
 
     return response
 
-    # return render(request, 'pdf/reporte.html')
+    # return render(request, 'pdf/reporte.html') """

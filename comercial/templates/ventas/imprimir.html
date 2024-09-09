@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imprimir Compra</title>
+    <title>Imprimir Venta</title>
     {% include 'includes/header.html' %}
     <style>
         @media print {
@@ -24,28 +24,28 @@
 <body>
     <div class="container px-0">
         <div class="row">
-            <h1 class="text-center">Información de Compra</h1>
+            <h1 class="text-center">Información de Venta</h1>
             <table class="table border">
                 <tbody>
                     <tr><td colspan="4" class="text-center table-dark">Datos</td></tr>
                     <tr>
                         
                         <td class="table-dark">Factura</td>
-                        <td>{{compra.factura}}</td>
+                        <td>{{venta.factura}}</td>
                         <td class="table-dark">Proveedor</td>
-                        <td>{{compra.proveedor.nombre}}</td>
+                        <td>{{venta.cliente.nombre}}</td>
                     </tr>
                     <tr>
                         <td class="table-dark">Teléfono</td>
-                        <td>{{compra.proveedor.telefono}}</td>
+                        <td>{{venta.cliente.telefono}}</td>
                         <td class="table-dark">Celular</td>
-                        <td>{{compra.proveedor.celular}}</td>
+                        <td>{{venta.cliente.celular}}</td>
                     </tr>
                     <tr>
                         <td class="table-dark">Dirección</td>
-                        <td>{{compra.proveedor.direccion}}</td>
+                        <td>{{venta.cliente.direccion}}</td>
                         <td class="table-dark">Ciudad</td>
-                        <td>{{compra.proveedor.ciudad}}</td>
+                        <td>{{venta.cliente.ciudad}}</td>
                     </tr>
                 </tbody>
             </table>
@@ -73,15 +73,15 @@
                     <div class="col px-0">
                         <div class="input-group my-2">
                             <span class="input-group-text" style="width: 80px;">Subtotal <i class="bi bi-currency-dollar"></i></span>
-                            <input type="text" class="form-control" style="text-align: right;" name="subtotal" id="subtotal" title="subtotal" value="{{compra.subtotal}}" readonly>
+                            <input type="text" class="form-control" style="text-align: right;" name="subtotal" id="subtotal" title="subtotal" value="{{venta.subtotal}}" readonly>
                         </div>
                         <div class="input-group my-2">
                             <span class="input-group-text" style="width: 80px;">IVA <i class="bi bi-currency-dollar"></i></span>
-                            <input type="text" class="form-control" style="text-align: right;" name="iva" id="iva" title="iva" value="{{compra.iva}}" readonly>
+                            <input type="text" class="form-control" style="text-align: right;" name="iva" id="iva" title="iva" value="{{venta.iva}}" readonly>
                         </div>
                         <div class="input-group my-2">
                             <span class="input-group-text" style="width: 80px;">Total <i class="bi bi-currency-dollar"></i></span>
-                            <input type="text" class="form-control" style="text-align: right;" name="total" id="total" title="total" value="{{compra.total}}" readonly>
+                            <input type="text" class="form-control" style="text-align: right;" name="total" id="total" title="total" value="{{venta.total}}" readonly>
                         </div>
                     </div>
                 </div>

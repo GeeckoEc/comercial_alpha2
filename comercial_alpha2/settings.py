@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-import os
+import os, dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    ## "whitenoise.middleware.WhiteNoiseMiddleware",               ## Para desplegar en RENDER
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -70,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
+""" WSGI_APPLICATION = "comercial_alpha2.wsgi.application" """  ## DESPLIEGUE EN RENDER
 
 
 # Database
@@ -91,11 +92,19 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "raquelita",
         "USER": "root",
-        "PASSWORD": "Romanos13:03",
+        "PASSWORD": "",
         "HOST": "localhost",
         "PORT": "3306",
     }
 }
+
+## POSTGRESQL RENDER
+""" DATABASES ={
+    "default": dj_database_url.config(
+        default="postgresql://raquelita_g4wa_user:t7m4AqgWXOSZ6vT7uQ8gnnnUw5GkA2Re@dpg-crfl4bbv2p9s739ns7sg-a.oregon-postgres.render.com/raquelita_g4wa",
+        conn_max_age=600
+    )
+} """
 
 
 # Password validation
@@ -132,11 +141,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
+STATIC_URL = "/static/"
+""" STATIC_ROOT = os.path.join(BASE_DIR, "static") """
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage" ## Para RENDER
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+## RENDER HOSTING
+""" ALLOWED_HOSTS = ['localhost', 'raquelita.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://raquelita.onrender.com'] """

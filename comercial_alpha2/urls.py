@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios, editar_usuario, deshabilitar_usuario, mostrar_usuario, generar_pdf_venta, imprimir_compra, imprimir_compra, lista_ventas
+from comercial.views import index, info_producto, lista_productos, gestion_productos, crear_compra, gestion_compras, lista_proveedores, gestion_proveedores, lista_marcas, gestion_marcas, crear_venta, gestion_ventas, lista_clientes, gestion_clientes, lista_compras, iniciar_sesion, cerrar_sesion, registrar_usuario, lista_usuarios, editar_usuario, deshabilitar_usuario, mostrar_usuario, imprimir_compra, lista_ventas, imprimir_venta
 
 urlpatterns = [
     path("", index, name="index"),
@@ -46,6 +46,7 @@ urlpatterns = [
     path('ventas/crear', crear_venta, name="crear_venta"),
     path('gestion_ventas', gestion_ventas, name="gestion_ventas"),
     path('ventas/lista', lista_ventas, name="lista_ventas"),
+    path('ventas/imprimir/<int:id>', imprimir_venta, name="imprimir_venta"),
 
     ## Clientes
     path('clientes/lista', lista_clientes, name="lista_clientes"),
@@ -62,5 +63,5 @@ urlpatterns = [
     path('usuario/detalles/<int:id>', mostrar_usuario, name="mostrar_usuario"),
 
     # pdf
-    path('pdf/factura/<int:id>', generar_pdf_venta, name="pdf_factura"),
+    ##""" path('pdf/factura/<int:id>', generar_pdf_venta, name="pdf_factura"), """
 ]
