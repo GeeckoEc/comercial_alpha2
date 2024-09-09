@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
-import dj_database_url # para postgresql
+import dj_database_url  # para postgresql
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_extensions",
-    "rest_framework", ## Rest
+    "rest_framework",  # Rest
     "comercial",
 ]
 
@@ -78,7 +78,7 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 
-## SQLite
+# SQLite
 """ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -86,7 +86,7 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
     }
 } """
 
-## MySQL
+# MySQL
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.mysql",
@@ -155,5 +155,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-ALLOWED_HOSTS = ['https://comercial-alpha2.onrender.com'] # para render
-CSRF_TRUSTED_ORIGINS = ['https://comercial-alpha2.onrender.com'] # para render
+ALLOWED_HOSTS = ['localhost', 'comercial-alpha2.onrender.com']  # para render
+CSRF_TRUSTED_ORIGINS = ['comercial-alpha2.onrender.com']  # para render
