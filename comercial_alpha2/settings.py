@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-dqq-vw4))kp^**knr$q$ui!fbpch3r*j3lhv8@i@r2vn4e)ie="
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -103,7 +103,7 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://comercial_brjg_user:t4Csv8CaLooXd3rs3LvbMqUbh4Qorsk3@dpg-crf77plsvqrc73f4ue4g-a/comercial_brjg',
+        default='postgresql://comercial_hc2r_user:JFzDeSvxeLQqP9uczmeiMjhfP4TeQakt@dpg-crf8s3rgbbvc73c0nqf0-a.oregon-postgres.render.com/comercial_hc2r',
         conn_max_age=600
     )
 }
