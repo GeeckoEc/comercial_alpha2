@@ -155,5 +155,5 @@ if not DEBUG:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-ALLOWED_HOSTS = ['localhost', 'https://comercial-alpha2.onrender.com/'] # para render
-CSRF_TRUSTED_ORIGINS = ['https://comercial-alpha2.onrender.com/'] # para render
+ALLOWED_HOSTS = ['https://comercial-alpha2.onrender.com'] # para render
+CSRF_TRUSTED_ORIGINS = ['https://comercial-alpha2.onrender.com'] # para render
