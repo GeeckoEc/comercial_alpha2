@@ -1,4 +1,10 @@
 <script>
+    let requisitos  = [{
+        seleccionados:  false,
+        proveedor:      false,
+        factura:        false
+    }]
+
     let lista_productos = []
     $(document).ready(()=>{
         $.ajaxSetup({
@@ -6,9 +12,13 @@
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
             }
         });
-        // sessionStorage.clear()
         lista_seleccionados()
     })
+
+    function regresar () {
+        window.location.href = '{% url "lista_compras" %}'
+    }
+
     function abrir_selector () {
         $('#productos-modal').modal('toggle')
         productos_sin_seleccionar()
@@ -107,29 +117,37 @@
                 estado: true
             }
         }).done(function (data){
+            let subtotal    =   0.00
+            let iva         =   0.00
+            let total       =   0.00
             $('#productos-seleccionados').html('')
-            if (data.success) {
+            if (sessionStorage.getItem('seleccionados') !==  null && JSON.parse(sessionStorage.getItem('seleccionados')).length  > 0) {
                 let ids = JSON.parse(sessionStorage.getItem('seleccionados'))
-                let total = 0.00
                 $.each(ids, function(index, id){
-                    let info = data.productos.find((producto) => producto.id == id.id)
-                    let marca = data.marcas.find((item) => item.id === info.marca)
-                    total = parseFloat(total) + (parseFloat(info.precio) * parseInt(id.cantidad))
+                    let info    =   data.productos.find((producto) => producto.id == id.id)
+                    let marca   =   data.marcas.find((item) => item.id === info.marca)
+                    subtotal    =   parseFloat(subtotal) + (parseFloat(id.costo) * parseInt(id.cantidad))
+                    iva         =   (parseFloat(subtotal) * 0.15)
+                    total       =   (parseFloat(subtotal) + parseFloat(iva))
                     $('#productos-seleccionados').append(`
                         <tr>
                             <td style="vertical-align: middle;">${index + 1}</td>
                             <td style="vertical-align: middle;">${info.nombre} ${marca.nombre} ${info.presentacion}</td>
                             <td style="vertical-align: middle; text-align: right;">${id.cantidad}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat(info.precio).toFixed(2)}</td>
-                            <td style="vertical-align: middle; text-align: right;">${parseFloat((info.precio) * parseInt(id.cantidad)).toFixed(2)}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat(id.costo).toFixed(2)}</td>
+                            <td style="vertical-align: middle; text-align: right;">${parseFloat((id.costo) * parseInt(id.cantidad)).toFixed(2)}</td>
                             <td style="vertical-align: middle;">
                                 <button class="btn btn-danger" onclick="quitar_producto(${id.id})"><i class="bi bi-x"></i></button>
                             </td>
                         </tr>
                     `)
                 })
-                $('#total').val(total.toFixed(2))
+            } else {
+                $('#productos-seleccionados').html('<tr><td colspan="6" style="text-align: center; color: gray;">No hay productos seleccionados.</td></tr>')
             }
+            $('#subtotal').val(subtotal.toFixed(2))
+            $('#total').val(total.toFixed(2))
+            $('#iva').val(iva.toFixed(2))
         })
     }
 
@@ -172,16 +190,34 @@
                             items:      JSON.stringify(JSON.parse(sessionStorage.getItem('seleccionados'))),
                             proveedor:  $('#proveedor').val(),
                             factura:    $('#factura').val(),
+                            subtotal:   $('#subtotal').val(),
+                            iva:        $('#iva').val(),
                             total:      $('#total').val()
                         }
                     }).then((respuesta) => {
                         if (respuesta.success) {
-                            mensaje('green', 'fa fa-circle-check', 'Procesar Compra', respuesta.message)
                             sessionStorage.removeItem('seleccionados')
                             $('#proveedor').val('0')
                             $('#factura').val('')
+                            $('#subtotal').val('')
+                            $('#iva').val('')
                             $('#total').val('')
+                            lista_seleccionados()
                         }
+                        $.alert({
+                                icon:               'fa fa-circle-check',
+                                title:              'Procesar Compra',
+                                type:               'green',
+                                content:            respuesta.message + '\n¿Desea realizar una nueva compra?',
+                                theme:              'modern',
+                                animateFromElement: false,
+                                buttons:            {
+                                    Sí: () => {
+                                        
+                                    }, 
+                                    No: () => {window.location.href = '{% url "lista_compras" %}'}
+                                }
+                            })
                     }).catch((error) => {
                         let respuesta = JSON.parse(error.responseText)
                         mensaje('red', 'fa fa-circle-xmark', 'Error al crear la compra: ', respuesta.message)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-                                                                                  
+# -*- coding: utf-8 -*-
 from django.contrib import admin
 
 from .models import Proveedor, Compra, Marca, Producto, Item_Compra, Kardex, Cliente, Venta, Item_Venta  
@@ -23,7 +23,16 @@ class ProveedorAdmin(admin.ModelAdmin):
 
 @admin.register(Compra)
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'proveedor', 'estado', 'factura', 'fecha', 'total')
+    list_display = (
+        'id',
+        'proveedor',
+        'estado',
+        'factura',
+        'fecha',
+        'subtotal',
+        'iva',
+        'total',
+    )
     list_filter = ('proveedor', 'estado', 'fecha')
 
 
@@ -73,7 +82,7 @@ class KardexAdmin(admin.ModelAdmin):
         'precio',
         'stock',
     )
-    list_filter = ('producto', 'transaccion', 'fecha')
+    list_filter = ('producto', 'fecha')
 
 
 @admin.register(Cliente)
@@ -96,7 +105,16 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'estado', 'cliente', 'fecha', 'factura', 'subtotal', 'iva', 'total')
+    list_display = (
+        'id',
+        'estado',
+        'cliente',
+        'fecha',
+        'factura',
+        'subtotal',
+        'iva',
+        'total',
+    )
     list_filter = ('estado', 'cliente', 'fecha')
 
 

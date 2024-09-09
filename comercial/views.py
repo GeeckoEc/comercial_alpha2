@@ -302,6 +302,19 @@ def crear_compra (request):
 def lista_compras (request):
     return render(request, 'compras/lista.html')
 
+def imprimir_compra (request, id):
+    compra  =   get_object_or_404(Compra, id=id)
+    items   =   compra.item_compra_set.all()
+    resultados = []
+    for item in items:
+        total = float(item.cantidad) * float(item.costo)
+        resultados.append((item, total))
+    contenido   =   {
+        'compra':   compra,
+        'items':   resultados,
+    }
+    return render(request, 'compras/imprimir.html', contenido)
+
 def gestion_compras (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'lista_compras':
@@ -329,6 +342,8 @@ def gestion_compras (request):
                 compra.factura      =   request.POST['factura']
                 compra.proveedor    =   Proveedor.objects.get(id=request.POST['proveedor'])
                 compra.fecha        =   datetime.now()
+                compra.subtotal     =   request.POST['subtotal']
+                compra.iva          =   request.POST['iva']
                 compra.total        =   request.POST['total']
                 compra.save()
                 items = json.loads(request.POST['items'])
@@ -338,7 +353,7 @@ def gestion_compras (request):
                     nuevo_kardex    =   Kardex.objects.create(
                         producto        =   producto,
                         transaccion     =   'Compra',
-                        costo           =   item['costo'],
+                        costo           =   float(item['costo'])*1.15,
                         precio          =   kardex.precio,
                         cantidad        =   item['cantidad'],
                         stock           =   int(kardex.stock) + int(item['cantidad'])
@@ -347,13 +362,45 @@ def gestion_compras (request):
                         compra          =   compra,
                         producto        =   producto,
                         cantidad        =   item['cantidad'],
-                        costo           =   item['costo']
+                        costo           =   float(item['costo'])*1.15
                     )
                 return JsonResponse({'success': True, 'message': 'La compra fue creada correctamente.'}, status=201)
             except Exception as e:
                 response_data   =   {
                     'success': False,
                     'message': 'Error al crear la compra: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'anular_compra':
+            try:
+                compra = Compra.objects.get(id=request.POST['id'])
+                compra.estado = False
+                compra.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La compra fue anulada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al anular la compra: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'habilitar_compra':
+            try:
+                compra = Compra.objects.get(id=request.POST['id'])
+                compra.estado = True
+                compra.save()
+                response_data = {
+                    'success': True,
+                    'message': 'La compra fue habilitada correctamente.',
+                }
+                return JsonResponse(response_data, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al habilitar la compra: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
         elif request.POST['accion'] == 'info_compra':
@@ -632,6 +679,8 @@ def gestion_ventas (request):
                 venta.factura   =   request.POST['factura']
                 venta.cliente   =   Cliente.objects.get(identificacion=request.POST['cliente'])
                 venta.fecha     =   datetime.now()
+                venta.subtotal  =   request.POST['subtotal']
+                venta.iva       =   request.POST['iva']
                 venta.total     =   request.POST['total']
                 venta.save()
                 for item in json.loads(request.POST['items']):

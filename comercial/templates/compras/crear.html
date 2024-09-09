@@ -11,7 +11,11 @@
     {% include 'includes/menu.html' %}
     <div class="container">
         <div class="row my-5 pt-5">
-            <h1 class="my-3">Ingresar nueva compra</h1>
+                <div class="col d-flex flex-row justify-content-between">
+                    <h1 class="my-3">Ingresar nueva compra</h1>
+                    <button type="button" class="btn btn-primary px-5" onclick="regresar()"><i class="bi bi-arrow-left-circle"></i> Regresar</button>
+                </div>
+
             <div >
                 <div class="row">
                     <div class="col">
@@ -40,8 +44,8 @@
                         <th style="width: 60px;">#</th>
                         <th>Producto</th>
                         <th style="width: 100px;">Cantidad</th>
-                        <th style="width: 100px;">Precio U.</th>
-                        <th style="width: 100px;">Sub-Total</th>
+                        <th style="width: 100px;">Costo U.</th>
+                        <th style="width: 100px;">Subtotal</th>
                         <th style="width: 60px; text-align: center;">···</th>
                     </thead>
                     <tbody id="productos-seleccionados"></tbody>
@@ -52,9 +56,16 @@
                     <div class="col"></div>
                     <div class="col">
                         <div class="input-group my-2">
-                            <span class="input-group-text">Total <i class="bi bi-currency-dollar"></i></span>
+                            <span class="input-group-text" style="width: 120px;">Subtotal <i class="bi bi-currency-dollar"></i></span>
+                            <input type="text" class="form-control" style="text-align: right;" name="subtotal" id="subtotal" title="subtotal" readonly>
+                        </div>
+                        <div class="input-group my-2">
+                            <span class="input-group-text" style="width: 120px;">IVA <i class="bi bi-currency-dollar"></i></span>
+                            <input type="text" class="form-control" style="text-align: right;" name="iva" id="iva" title="iva" readonly>
+                        </div>
+                        <div class="input-group my-2">
+                            <span class="input-group-text" style="width: 120px;">Total <i class="bi bi-currency-dollar"></i></span>
                             <input type="text" class="form-control" style="text-align: right;" name="total" id="total" title="total" readonly>
-                            <label for="total"></label>
                         </div>
                         <button class="btn btn-success form-control" onclick="procesar()"><i class="bi bi-check-circle"></i> Procesar Compra</button>
                     </div>
