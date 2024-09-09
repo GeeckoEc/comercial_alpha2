@@ -89,9 +89,9 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "raquelita",
+        "NAME": "comercial",
         "USER": "root",
-        "PASSWORD": "",
+        "PASSWORD": "2002",
         "HOST": "localhost",
         "PORT": "3306",
     }
@@ -122,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Guayaquil"
 
 USE_I18N = True
 
