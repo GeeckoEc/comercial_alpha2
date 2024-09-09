@@ -1,0 +1,210 @@
+<script>
+    $(document).ready(() => {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });
+        cargar()
+    })
+
+    function cargar () {
+        $.ajax({
+            url:        '{% url "gestion_ventas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'lista_ventas',
+                estado:     JSON.parse($('#estado').val())
+            }
+        }).then((respuesta) => {
+            lista(respuesta.ventas)
+        }).catch((error) => {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark',  'Error al cargar la lista de ventas', 'red', respuesta.mensaje)
+
+        })
+    }
+
+    function buscar (buscar) {
+        $.ajax({
+            url:        '{% url "gestion_ventas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'buscar',
+                buscar:     buscar,
+                estado:     JSON.parse($('#estado').val())
+            }
+        }).then((respuesta) => {
+            lista(respuesta.ventas)
+        }).catch((error) => {
+            let respuesta = JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark',  'Error al buscar la lista de ventas', 'red', respuesta.mensaje)
+        })
+    }
+
+    function nueva () {
+        window.location.href = '{% url "crear_venta" %}'
+    }
+
+    function ver (id) {
+        $.ajax({
+            url:        '{% url "gestion_ventas" %}',
+            type:       'POST',
+            dataType:   'JSON',
+            data:       {
+                accion:     'info_venta',
+                id:         id
+            }
+        }).then((respuesta) => {
+            let fecha =  new Date(respuesta.venta.fecha)
+
+            $('.modal-body').html(`
+                <div class="row">
+                    <div class="col">
+                        <h6>Cliente</h6>
+                        <p class="text-muted">${respuesta.venta.cliente_nombre} ${respuesta.venta.cliente_apellido}</p>
+                        <h6>Factura</h6>
+                        <p class="text-muted">${respuesta.venta.factura}</p>
+                    </div>
+                    <div class="col">
+                        <h6>Identificación</h6>
+                        <p class="text-muted">${respuesta.venta.cliente_identificacion}</p>
+                        <h6>Fecha</h6>
+                        <p class="text-muted">${(`0${fecha.getDate()}`).slice(-2)}-${(`0${fecha.getMonth() + 1}`).slice(-2)}-${fecha.getFullYear()}</p>
+                    </div>
+                </div>
+                <table class="table table-borderless border">
+                    <thead class="table-dark">
+                        <th>Producto</th>
+                        <th style="width: 60px;">Cant.</th>
+                        <th style="width: 80px;">Subtotal</th>
+                    </thead>
+                    <tbody id="productos-venta"></tbody>
+                </table> 
+            `)
+            $.each(respuesta.items, (index, item) => {
+                $('#productos-venta').append(`
+                    <tr>
+                        <td style="vertical-align: middle;">${item.producto_marca} - ${item.producto_nombre}</td>
+                        <td style="vertical-align: middle;">${item.cantidad}</td>
+                        <td style="vertical-align: middle;">${(parseInt(item.cantidad) * parseFloat(item.precio)).toFixed(2)}</td>
+                    </tr>
+                `)
+            })
+            $('#etiqueta-modal').html('Información de la Venta')
+            $('#modal').modal('toggle')
+        }).catch((error) => {
+            let respuesta =  JSON.parse(error.responseText)
+            mensaje('fa fa-circle-xmark',  'Error al cargar la información de la venta', 'red',  respuesta.mensaje)
+        })
+    }
+
+    function imprimir (id) {
+        window.open('/ventas/imprimir/'+id, '_blank');
+    }
+
+    function anular (id) {
+        $.alert({
+            icon:               'fa fa-circle-xmark',
+            title:              'Anular Venta',
+            type:               'red',
+            content:            `¿Está seguro que desea anular la venta?`, 
+            theme:              'modern',
+            animateFromElement: false,
+            buttons: {
+                Sí:  () => {
+                    $.ajax({
+                        type:       'POST',
+                        dataType:   'JSON',
+                        url:        '{% url "gestion_ventas" %}',
+                        data:       {
+                            accion:     'anular_venta',
+                            id:         id
+                        }
+                    }).then((respuesta) => {
+                        mensaje('fa fa-circle-check',  'Anular Venta', 'green', respuesta.mensaje)
+                        cargar()
+                    }).catch((error) => {
+                        let respuesta =  JSON.parse(error.responseText)
+                        mensaje('fa fa-circle-xmark',  'Error al anular la venta', 'red',  respuesta.mensaje)
+                    })
+                },
+                No: ()=>{}
+            }
+        })
+    }
+
+    function habilitar (id) {
+        $.alert({
+            icon:               'fa fa-circle-xmark',
+            title:              'Habiitar Venta',
+            type:               'red',
+            content:            `¿Está seguro que desea habilitar la venta?`, 
+            theme:              'modern',
+            animateFromElement: false,
+            buttons: {
+                Sí:  () => {
+                    $.ajax({
+                        type:       'POST',
+                        dataType:   'JSON',
+                        url:        '{% url "gestion_ventas" %}',
+                        data:       {
+                            accion:     'habilitar_venta',
+                            id:         id
+                        }
+                    }).then((respuesta) => {
+                        mensaje('fa fa-circle-check',  'Habilitar Venta', 'green', respuesta.mensaje)
+                        cargar()
+                    }).catch((error) => {
+                        let respuesta =  JSON.parse(error.responseText)
+                        mensaje('fa fa-circle-xmark',  'Error al habilitar la venta', 'red',  respuesta.mensaje)
+                    })
+                },
+                No: ()=>{}
+            }
+        })
+    }
+
+    function lista (ventas) {
+        if(ventas.length == 0) {
+            $('#lista-ventas').html('<tr><td colspan="5" style="text-align: center; color: gray">No hay ventas para mostrar.</td></tr>');
+            return false;
+        }
+        $('#lista-ventas').html('')
+        $.each(ventas, (index, venta) => {
+            let fecha = new Date(venta.fecha)
+            let boton = `<button type="button" class="btn btn-danger" onclick="anular(${venta.id})"><i class="bi bi-x"></i></button>`
+            if (!JSON.parse($('#estado').val())) {
+                boton = `<button type="button" class="btn btn-success" onclick="habilitar(${venta.id})"><i class="bi bi-check-circle"></i></button>`
+            }
+            $('#lista-ventas').append(`
+                <tr>
+                    <td style="vertical-align: middle;">${(`0${fecha.getDate()}`).slice(-2)}-${(`0${fecha.getMonth() + 1}`).slice(-2)}-${fecha.getFullYear()} ${fecha.getHours()}:${fecha.getMinutes()}</td>
+                    <td style="vertical-align: middle; ">${venta.cliente_nombre} ${venta.cliente_apellido}</td>
+                    <td style="vertical-align: middle; text-align: right;">${venta.total}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary" onclick="ver(${venta.id})"><i class="bi bi-info-circle"></i></button>
+                        <button type="button" class="btn btn-primary" onclick="imprimir(${venta.id})"><i class="bi bi-printer"></i></button>
+                        ${boton}
+                    </td>
+                </tr>
+            `)
+        })
+    }
+
+    function mensaje (icono, titulo, color, mensaje) {
+        $.alert({
+            icon:               icono,
+            title:              titulo,
+            type:               color,
+            content:            mensaje,
+            theme:              'modern',
+            animateFromElement: false,
+            buttons:            {
+                Cerrar:     () => {}
+            }
+        })
+    }
+</script>

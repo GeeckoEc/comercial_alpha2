@@ -73,6 +73,23 @@ class KardexSerializer(serializers.ModelSerializer):
         model = Kardex
         fields = '__all__'
 
+class VentaSerializer(serializers.ModelSerializer):
+    cliente_nombre          =   serializers.CharField(source='cliente.nombre')
+    cliente_apellido        =   serializers.CharField(source='cliente.apellido')
+    cliente_identificacion  =   serializers.CharField(source='cliente.identificacion')
+
+    class Meta:
+        model = Venta
+        fields = '__all__'
+
+class Item_VentaSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.CharField(source='producto.nombre')
+    producto_marca = serializers.CharField(source='producto.marca.nombre')
+
+    class Meta:
+        model = Item_Venta
+        fields = '__all__'
+    
 def index (request):
     return render(request, 'index.html')
 
@@ -426,7 +443,8 @@ def gestion_compras (request):
                     estado = False
                 compras = Compra.objects.filter(estado=estado).filter(
                     Q(factura__icontains=request.POST['buscar']) |
-                    Q(proveedor__nombre__icontains=request.POST['buscar'])
+                    Q(proveedor__nombre__icontains=request.POST['buscar']) |
+                    Q(proveedor__identificacion__icontains=request.POST['buscar'])
                 ).prefetch_related('proveedor')
                 contenido = {
                     'compras': CompraSerializer(compras, many=True).data,
@@ -683,7 +701,57 @@ def lista_ventas (request):
 
 def gestion_ventas (request):
     if request.method == 'POST':
-        if request.POST['accion'] == 'crear_venta':
+        if request.POST['accion'] == 'lista_ventas':
+            try:
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                ventas = Venta.objects.filter(estado=estado).prefetch_related('cliente')
+                contenido   = {
+                    'ventas': VentaSerializer(ventas, many=True).data,
+                    'success': True,
+                }
+                return JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al listar las ventas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'info_venta':
+            venta = Venta.objects.get(id=request.POST['id'])
+            items = Item_Venta.objects.filter(venta=venta).prefetch_related('producto', 'producto__marca')
+            contenido = {
+                'venta': VentaSerializer(venta).data,
+                'items':  Item_VentaSerializer(items, many=True).data,
+                'success': True,
+            }
+            return JsonResponse(contenido, status=201)
+        elif request.POST['accion'] == 'buscar':
+            try:
+                if  request.POST['estado'].lower() == 'true':
+                    estado = True
+                else:
+                    estado = False
+                ventas = Venta.objects.filter(estado=estado).filter(
+                    Q(factura__icontains=request.POST['buscar']) |
+                    Q(cliente__nombre__icontains=request.POST['buscar']) |
+                    Q(cliente__apellido__icontains=request.POST['buscar']) |
+                    Q(cliente__identificacion__icontains=request.POST['buscar'])
+                ).prefetch_related('cliente')
+                contenido = {
+                    'ventas': VentaSerializer(ventas, many=True).data,
+                    'success': True,
+                }
+                return  JsonResponse(contenido, status=201)
+            except Exception as e:
+                response_data = {
+                    'success': False,
+                    'message': 'Error al buscar las ventas: {}'.format(str(e))
+                }
+                return JsonResponse(response_data, status=500)
+        elif request.POST['accion'] == 'crear_venta':
             try:
                 venta = Venta()
                 venta.factura   =   request.POST['factura']
@@ -703,7 +771,6 @@ def gestion_ventas (request):
                         precio      =   item['precio'],
                         cantidad    =   item['cantidad'],
                         stock       =   int(kardex.stock) - int(item['cantidad'])
-
                     )
                     Item_Venta.objects.create(
                         venta       =   venta,
@@ -722,7 +789,7 @@ def gestion_ventas (request):
                     'message': 'Error al crear la venta: {}'.format(str(e))
                 }
                 return JsonResponse(response_data, status=500)
-        if request.POST['accion'] == 'siguiente_factura':
+        elif request.POST['accion'] == 'siguiente_factura':
             try:
                 factura = Venta.objects.latest('fecha').factura
                 next_factura = str(int(factura.lstrip('0')) + 1).zfill(12)
