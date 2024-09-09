@@ -101,7 +101,7 @@ WSGI_APPLICATION = "comercial_alpha2.wsgi.application"
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://comercial_hc2r_user:JFzDeSvxeLQqP9uczmeiMjhfP4TeQakt@dpg-crf8s3rgbbvc73c0nqf0-a.oregon-postgres.render.com/comercial_hc2r',
+        default='postgresql://comercial_8vnb_user:aFF12UnWRE2IDEEzTJ5tZ7LlrQhiq5jH@dpg-crf9njlsvqrc73f5mme0-a.oregon-postgres.render.com/comercial_8vnb',
         conn_max_age=600
     )
 }
