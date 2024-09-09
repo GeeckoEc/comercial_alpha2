@@ -671,6 +671,10 @@ def crear_venta (request):
     contenido['clientes']    =   Cliente.objects.filter(estado=True)
     return render(request, 'ventas/crear.html', contenido)
 
+def lista_ventas (request):
+    contenido = {}
+    return render(request, 'ventas/lista.html', contenido)
+
 def gestion_ventas (request):
     if request.method == 'POST':
         if request.POST['accion'] == 'crear_venta':
