@@ -19,6 +19,12 @@ from django.contrib.auth.models import Group, User
 
 from django.db import IntegrityError
 
+# pdf
+from weasyprint import HTML, CSS
+from weasyprint.text.fonts import FontConfiguration
+from django.template.loader import get_template
+from pathlib import Path
+
 class ProductoSerializer(serializers.ModelSerializer):
     kardex_costo = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, default=0)
     kardex_precio = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True,  default=0)
@@ -891,7 +897,7 @@ def iniciar_sesion(request):
             return render(request, 'usuarios/login.html', {'error': 'Usuario o contraseña incorrectos.'})
 
         login(request, usuario)
-        return redirect('index')
+        return redirect('lista_compras')
 
 @login_required
 def cerrar_sesion(request):
@@ -1061,3 +1067,41 @@ def mostrar_usuario(request, id):
             "campos": campos,
             "roles": Group.objects.all()
         })
+
+
+
+# Generar pdf's
+@login_required
+def generar_pdf_venta(request, id):
+
+    venta = get_object_or_404(Venta, id=id)
+
+    cliente = venta.cliente
+
+    items = Item_Venta.objects.filter(venta=venta).select_related('producto')
+
+    filename = f'venta_{venta.factura}.pdf'
+
+    template = get_template('pdf/reporte.html',)
+    context = {
+        'title': 'Reporte de venta',
+        'venta': venta,
+        'items': items,
+        'cliente': cliente
+    }
+    print(items)
+    html = template.render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    font_config=FontConfiguration()
+    html = HTML(string=html)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    css = CSS(filename=f'{BASE_DIR}/comercial/static/pdf/styles.css', font_config=font_config)
+    result  = html.write_pdf(encoding='utf-8', stylesheets=[css],font_config=font_config)
+    response.write(result)
+
+    return response
+
+    # return render(request, 'pdf/reporte.html')

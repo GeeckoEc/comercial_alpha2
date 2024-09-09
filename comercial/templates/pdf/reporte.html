@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <meta name="description" content="Facturación ejemplo">
+  <link href="/static/pdf/styles.css" rel="stylesheet">
+</head>
+
+<body>
+  <h2>{{ title }}</h2>
+
+  <h4>Datos del cliente</h4>
+
+  <aside>
+    <address id="from">
+      Nombre
+      Apellido
+      Tipo de identificación
+      Identificación
+      Dirección
+      Celular
+      Correo
+    </address>
+
+    <address id="to">
+      {{ cliente.nombre }}
+      {{ cliente.apellido }}
+      {{ cliente.tipo_identificacion }}
+      {{ cliente.identificacion }}
+      {{ cliente.direccion }}
+      {{ cliente.celular }}
+      {{ cliente.correo }}
+    </address>
+  </aside>
+
+  <dl id="informations">
+    <dt>Nro. de factura</dt>
+    <dd>{{ venta.factura }}</dd>
+    <dt>Fecha</dt>
+    <dd>{{ venta.fecha }}</dd>
+  </dl>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Productos</th>
+        <th>Cantidad</th>
+        <th>Precio Unitario</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for item in items %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.producto.nombre }}</td>
+        <td>{{ item.cantidad }}</td>
+        <td>${{ item.producto.precio }}</td>
+        <td>${{ item.precio }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <footer>
+    <table id="total">
+      <thead>
+        <tr>
+          <th>IVA</th>
+          <th>Subtotal</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ venta.iva }}%</td>
+          <td>${{ venta.subtotal }}</td>
+          <td>${{ venta.total }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </footer>
+</body>
+
+</html>
