@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    ## "whitenoise.middleware.WhiteNoiseMiddleware",               ## Para desplegar en RENDER
+    "whitenoise.middleware.WhiteNoiseMiddleware",               ## Para desplegar en RENDER
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-""" WSGI_APPLICATION = "comercial_alpha2.wsgi.application" """  ## DESPLIEGUE EN RENDER
+WSGI_APPLICATION = "comercial_alpha2.wsgi.application"  ## DESPLIEGUE EN RENDER
 
 
 # Database
@@ -87,7 +87,7 @@ TEMPLATES = [
 } """
 
 ## MySQL
-DATABASES = {
+""" DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "raquelita",
@@ -96,15 +96,15 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "3306",
     }
-}
+} """
 
 ## POSTGRESQL RENDER
-""" DATABASES ={
+DATABASES ={
     "default": dj_database_url.config(
         default="postgresql://raquelita_g4wa_user:t7m4AqgWXOSZ6vT7uQ8gnnnUw5GkA2Re@dpg-crfl4bbv2p9s739ns7sg-a.oregon-postgres.render.com/raquelita_g4wa",
         conn_max_age=600
     )
-} """
+}
 
 
 # Password validation
@@ -152,5 +152,5 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage" 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ## RENDER HOSTING
-""" ALLOWED_HOSTS = ['localhost', 'raquelita.onrender.com']
-CSRF_TRUSTED_ORIGINS = ['https://raquelita.onrender.com'] """
+ALLOWED_HOSTS = ['localhost', 'raquelita.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://raquelita.onrender.com']
